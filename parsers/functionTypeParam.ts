@@ -1,6 +1,6 @@
 import { Ok, Err } from "ts-features";
 
-import { Node } from "core/parser";
+import { Node } from "infinite-lang/core/parser";
 import { makeParseRuleModule } from "infinite-lang/rule/parser";
 
 export default makeParseRuleModule({ role: "functionTypeParam", nodeType: "functionTypeParam", priority: 0 }, [

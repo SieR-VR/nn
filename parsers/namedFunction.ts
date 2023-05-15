@@ -4,7 +4,8 @@ export default makeParseRuleModule({ role: "statement", nodeType: "namedFunction
     {
         role: "identifier",
         condition: () => true,
-        key: "identifier"
+        key: "identifier",
+        semanticHighlight: "variable"
     },
     {
         role: "expression",

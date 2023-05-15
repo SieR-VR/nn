@@ -4,6 +4,6 @@ export default makeParseRuleModule({ role: "expression", nodeType: "identifierEx
     {
         role: "identifier",
         condition: () => true,
-        key: "identifier"
+        key: "identifier",
     },
 ] as const);

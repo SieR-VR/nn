@@ -1,10 +1,11 @@
 import { makeParseRuleModule } from "infinite-lang/rule/parser";
 
-export default makeParseRuleModule({ role: "expression", nodeType: "functionCall", priority: 0 }, [
+export default makeParseRuleModule({ role: "expression", nodeType: "functionCall", priority: 1 }, [
     {
         role: "identifier",
         condition: () => true,
-        key: "identifier"
+        key: "identifier",
+        semanticHighlight: "function"
     },
     {
         role: "expressionList",

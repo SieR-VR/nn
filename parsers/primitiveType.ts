@@ -5,5 +5,6 @@ export default makeParseRuleModule({ role: "type", nodeType: "primitiveType", pr
         role: "identifier",
         condition: ({ nodeType }) => nodeType === "identifier",
         key: "identifier",
+        semanticHighlight: "type"
     }
 ] as const);
