@@ -1,0 +1,4 @@
+entry[1, 2](x: Tensor[BATCH, 1]<floating>): Tensor[BATCH, 2]<floating> {
+	let x = linear(uniform[1, 2](-1, 1), uniform[2](-1, 1))(x);
+	x
+}

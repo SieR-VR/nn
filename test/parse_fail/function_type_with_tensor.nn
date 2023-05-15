@@ -1,0 +1,1 @@
+[A, B, C](Tensor[A, B]<floating>): Tensor[B, C]<floating>

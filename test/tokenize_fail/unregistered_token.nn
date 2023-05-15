@@ -1,0 +1,8 @@
+linear[d1, d2](
+	weights: Tensor[d1, d2]<floating>, 
+	biases: Tensor[d2]<floating>
+): [BATCH](Tensor[BATCH, d1]<floating>): Tensor[BATCH, d2]<floating> {
+	[BATCH](x: Tensor[BATCH, d1]<floating>): Tensor[BATCH, d2]<floating> {
+		bias(dot(x, weights), biases)
+    }%
+}
