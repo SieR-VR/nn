@@ -1,0 +1,6 @@
+{
+    "token": "lib/tokens",
+    "parser": [
+        "lib/parsers/*"
+    ]
+}

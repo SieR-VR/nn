@@ -1,0 +1,16 @@
+{
+  "name": "nn",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "SieR-VR",
+  "license": "MIT",
+  "packageManager": "yarn@1.22.19",
+  "dependencies": {
+    "infinite-lang": "^0.0.11"
+  }
+}
