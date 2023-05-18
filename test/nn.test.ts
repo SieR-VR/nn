@@ -2,15 +2,12 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { tokenize, TokenizerInput } from "infinite-lang/core/tokenizer";
-import { parse, ParserInput } from "infinite-lang/core/parser";
+import { parse, ParserInput, Node } from "infinite-lang/core/parser";
 
 import tokenizers from "../tokens";
 import { nnParsers as parsers } from "../parsers";
 
 describe("tokenizer function", () => {
-    console.log(tokenizers.length)
-    console.log(parsers.length)
-
     const success_files = fs.readdirSync(path.join(__dirname, 'tokenize'));
     const fail_files = fs.readdirSync(path.join(__dirname, 'tokenize_fail'));
 
@@ -59,7 +56,15 @@ describe("parser function", () => {
             };
 
             const ast = parse(parserInput, parsers as any, () => {});
-            fs.writeFileSync(path.join(__dirname, 'passed', file + '.json'), JSON.stringify(ast, null, 2));
+            expect(ast.is_ok()).toBe(true);
+
+            fs.writeFileSync(path.join(__dirname, 'passed', file + '.json'), JSON.stringify(ast, (key, value) => {
+                if (key === "children") {
+                    return undefined;
+                }
+
+                return value;
+            }, 2));
         });
     });
 });

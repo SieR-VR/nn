@@ -10,7 +10,7 @@
   "author": "SieR-VR",
   "license": "MIT",
   "dependencies": {
-    "infinite-lang": "https://github.com/SieR-VR/infinite#master"
+    "infinite-lang": "0.0.15-1f8db3d6f851c09767364ad13a3366f5e72e8093.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.1",
