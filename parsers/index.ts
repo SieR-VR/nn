@@ -6,9 +6,11 @@ import FunctionParam from "./functionParam";
 import FunctionType from "./functionType";
 import FunctionTypeParam from "./functionTypeParam";
 import Identifier from "./identifier";
+import IdentifierSizeType from "./identifierSizeType";
 import IdentifierExpression from "./identifierExpression";
 import Let from "./let";
 import NamedFunction from "./namedFunction";
+import NumberSizeType from "./numberSizeType";
 import NumericLiteral from "./numericLiteral";
 import PrimitiveType from "./primitiveType";
 import PrimitiveTypeParam from "./primitiveTypeParam";
@@ -25,9 +27,11 @@ export const nnParsers = [
     FunctionType,
     FunctionTypeParam,
     Identifier,
+    IdentifierSizeType,
     IdentifierExpression,
     Let,
     NamedFunction,
+    NumberSizeType,
     NumericLiteral,
     PrimitiveType,
     PrimitiveTypeParam,

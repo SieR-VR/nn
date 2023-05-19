@@ -4,7 +4,8 @@ export default makeParseRuleModule({ role: "expression", nodeType: "functionCall
     {
         role: "identifier",
         condition: () => true,
-        key: "identifier"
+        key: "identifier",
+        semanticHighlight: "function"
     },
     {
         role: "expressionList",

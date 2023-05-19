@@ -4,7 +4,8 @@ export default makeParseRuleModule({ role: "variableWithType", nodeType: "variab
     {
         role: "identifier",
         condition: () => true,
-        key: "identifier"
+        key: "identifier",
+        semanticHighlight: "property"
     },
     {
         tokenType: "Colon"
