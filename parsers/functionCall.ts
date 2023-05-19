@@ -8,6 +8,12 @@ export default makeParseRuleModule({ role: "expression", nodeType: "functionCall
         semanticHighlight: "function"
     },
     {
+        role: "sizeTypeParam",
+        condition: () => true,
+        key: "sizeTypeParam",
+        isOptional: true
+    },
+    {
         role: "expressionList",
         condition: () => true,
         key: "params"

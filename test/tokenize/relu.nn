@@ -1,3 +1,0 @@
-relu(x: floating): floating {
-    x > 0 ? x : 0
-}

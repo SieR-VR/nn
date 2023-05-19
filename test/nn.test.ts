@@ -56,6 +56,10 @@ describe("parser function", () => {
             };
 
             const ast = parse(parserInput, parsers as any, () => {});
+            if (ast.is_err()) {
+                console.log(ast.unwrap_err());
+            }
+
             expect(ast.is_ok()).toBe(true);
 
             fs.writeFileSync(path.join(__dirname, 'passed', file + '.json'), JSON.stringify(ast, (key, value) => {
