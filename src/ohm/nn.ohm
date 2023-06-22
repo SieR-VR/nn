@@ -1,0 +1,93 @@
+Program {
+  TopLevelFunction
+    = ident Function
+
+  Function
+  	= SizeArguments<SizeType>? TypeArguments<PrimitiveType>? Arguments<Argument> Typed? Block
+    
+  Block
+  	= "{" Statement* "}"
+    
+  Statement
+   = LetStatement
+   | ReturnStatement
+   
+  LetStatement
+   = "let" ident Typed? "=" Expression ";"
+   
+  ReturnStatement
+   = Expression
+    
+  Expression
+  	= ArithmeticExpression
+    | FunctionExpression
+    
+  FunctionExpression
+   	= Function
+       
+  ArithmeticExpression
+   = ArithmeticExpression "+" PrimaryExpression -- plus
+   | ArithmeticExpression "-" PrimaryExpression -- minus
+   | ArithmeticExpression "*" PrimaryExpression -- multiply
+   | PrimaryExpression
+   
+  PrimaryExpression
+   = "(" Expression ")"    -- paren
+   | "-" PrimaryExpression -- neg
+   | CallExpression        -- call
+   | IdentExpression
+   | NumberExpression
+  
+  IdentExpression
+   = ident
+   
+  CallExpression
+   = ident Arguments<Expression>
+   
+  NumberExpression
+   = number
+
+  Argument
+  	= ident Typed?
+
+  Type
+  	= TensorType
+    | PrimitiveType
+    | FunctionType
+    
+  SizeType
+  	= ident
+    | number
+    | "..." ident -- destructure
+   
+  TensorType
+  	= "Tensor" SizeArguments<SizeType> TypeArguments<PrimitiveType>?
+    
+  PrimitiveType
+  	= ident 
+    
+  FunctionType
+    = SizeArguments<SizeType>? TypeArguments<PrimitiveType>? Arguments<Type> Typed?
+    
+  Arguments<Arg>
+  	= "(" ElementsList<Arg, ","> ")"
+  
+  TypeArguments<Type>
+    = "<" ElementsList<Type, ","> ">"
+    
+  SizeArguments<Size>
+  	= "[" ElementsList<Size, ","> "]"
+    
+  Typed
+  	= ":" Type
+  
+  ElementsList<Element, seperator>
+  	= Element (seperator Element)*
+    
+  ident  (an identifier)
+    = letter (alnum | "_")*
+
+  number  (a number)
+    = digit* "." digit+  -- fract
+    | digit+             -- whole
+}

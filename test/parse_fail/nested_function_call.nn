@@ -1,1 +1,0 @@
-bias(dot(x, weights), biases)

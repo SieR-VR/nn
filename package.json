@@ -10,9 +10,11 @@
   "author": "SieR-VR",
   "license": "MIT",
   "dependencies": {
-    "infinite-lang": "0.0.15-1f8db3d6f851c09767364ad13a3366f5e72e8093.0"
+    "ohm-js": "^17.1.0",
+    "onnxruntime-web": "^1.15.1"
   },
   "devDependencies": {
+    "@ohm-js/cli": "^2.0.0",
     "@types/jest": "^29.5.1",
     "@types/node": "^20.1.7",
     "jest": "^29.5.0",
