@@ -1,5 +1,0 @@
-reshape[BATCH, ...dims_x, ...dims_y](
-	x: Tensor[BATCH, ...dims_x]
-): Tensor[BATCH, ...dims_y]
-{
-}
