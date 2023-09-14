@@ -1,8 +1,0 @@
-# packages
-node_modules
-
-# IDEs and editors
-compose-dev.yaml
-
-# Build result
-lib
