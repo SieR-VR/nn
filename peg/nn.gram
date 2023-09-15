@@ -1,0 +1,85 @@
+# PEG Grammar for nn
+
+@class NNParser
+@subheader'''
+
+'''
+
+# STARTING
+# ========
+
+start: file
+
+file: a=[statements] ENDMARKER { a }
+
+# STATEMENTS
+# ==========
+
+statements: (NEWLINE* statement NEWLINE*)+
+
+statement: 
+    | simple_stmt [';'] 
+    | compound_stmt
+
+simple_stmt:
+    | &'let' decl_stmt
+    | &'import' import_stmt
+
+compound_stmt:
+    | func_decl_stmt
+    | expr_stmt
+    | &'export' export_stmt
+    | &'{' block_stmt
+
+# SIMPLE STATEMENTS
+# =================
+
+decl_stmt: 'let' NAME ':' type_expr '=' expr ';'
+expr_stmt: expr
+func_decl_stmt: NAME func_expr
+
+# COMPOUND STATEMENTS
+# ===================
+
+import_stmt: 'import' import_list 'from' import_dest
+export_stmt: 'export' expr
+
+import_list: import_item (',' import_item)* [',']
+import_item: NAME ['as' NAME]
+import_dest: STRING
+
+block_stmt: '{' [statements] '}'
+
+# EXPRESSIONS
+# ===========
+
+expr:
+    | func_expr
+    | call_expr
+    | NAME
+
+func_expr: [sizetype_expr_list] [type_expr_list] '(' arg_decl (',' arg_decl)* [','] ')' ':' type_expr NEWLINE* block_stmt
+call_expr: expr '(' expr (',' expr)* [','] ')'
+arg_decl: NAME ':' type_expr
+
+# TYPE
+# ====
+
+type_expr:
+    | data_type_expr
+    | func_type_expr
+    
+data_type_expr: NAME [sizetype_expr_list] [type_expr_list] 
+func_type_expr: [sizetype_expr_list] [type_expr_list]  ('(' type_expr (',' type_expr)* [','] ')')* ':' type_expr 
+
+type_expr_list: '<' type_expr (',' type_expr)* [','] '>'
+
+# SIZE TYPE
+# =========
+
+sizetype_expr:
+    | '...' NAME
+    | NUMBER
+    | NAME
+
+sizetype_expr_list: '[' sizetype_expr (',' sizetype_expr)* [','] ']'
