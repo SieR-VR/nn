@@ -1,6 +1,8 @@
 from node import Node
+from nn_ast.expression import Expression
+from tokenize import TokenInfo
 
 class ExportStatement(Node):
-    def __init__(self, items: list[str], *args, **kwargs) -> None:
+    def __init__(self, item: Expression, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.items = items
+        self.item = item

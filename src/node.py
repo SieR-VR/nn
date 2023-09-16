@@ -22,5 +22,5 @@ class Node:
     def __str__(self) -> str:
         return self.sourceFile[self.start : self.end]
 
-    def toJSON(self) -> dict:
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    def toJSON(self, indent=2) -> dict:
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=indent)

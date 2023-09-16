@@ -9,10 +9,10 @@ if TYPE_CHECKING:
 class FuncTypeExpr(Node):
     def __init__(
         self,
-        size_type: SizeType,
-        generic_type: GenericType,
-        param_list: list[TypeExpr],
-        return_type: TypeExpr,
+        size_type: "SizeType",
+        generic_type: "GenericType",
+        param_list: list["TypeExpr"],
+        return_type: "TypeExpr",
         *args,
         **kwargs
     ) -> None:

@@ -6,6 +6,8 @@ from typing import Any, Optional
 from nn_ast import *
 from nn_ast.stmts import *
 from nn_ast.exprs import *
+from nn_ast.types import *
+from nn_ast.types.type_expr import *
 
 # Keywords and soft keywords are listed at the end of the parser definition.
 class NNParser(Parser):
@@ -40,7 +42,7 @@ class NNParser(Parser):
 
     @memoize
     def statements(self) -> Optional[Any]:
-        # statements: ((NEWLINE* statement NEWLINE*))+
+        # statements: statement+
         mark = self._mark()
         if (
             (stmts := self._loop1_1())
@@ -50,8 +52,8 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def statement(self) -> Optional[Any]:
-        # statement: simple_stmt ';'? | compound_stmt
+    def statement(self) -> Optional[Statement]:
+        # statement: simple_stmt ';'? NEWLINE+? | compound_stmt NEWLINE+?
         mark = self._mark()
         tok = self._tokenizer.peek()
         start_lineno, start_col_offset = tok.start
@@ -59,6 +61,8 @@ class NNParser(Parser):
             (stmt := self.simple_stmt())
             and
             (self.expect(';'),)
+            and
+            (self._loop1_2(),)
         ):
             tok = self._tokenizer.get_last_non_whitespace_token()
             end_lineno, end_col_offset = tok.end
@@ -66,6 +70,8 @@ class NNParser(Parser):
         self._reset(mark)
         if (
             (stmt := self.compound_stmt())
+            and
+            (self._loop1_3(),)
         ):
             tok = self._tokenizer.get_last_non_whitespace_token()
             end_lineno, end_col_offset = tok.end
@@ -227,11 +233,11 @@ class NNParser(Parser):
         if (
             (import_item := self.import_item())
             and
-            (_loop0_2 := self._loop0_2(),)
+            (_loop0_4 := self._loop0_4(),)
             and
             (opt := self.expect(','),)
         ):
-            return [import_item, _loop0_2, opt];
+            return [import_item, _loop0_4, opt];
         self._reset(mark)
         return None;
 
@@ -242,7 +248,7 @@ class NNParser(Parser):
         if (
             (name := self.name())
             and
-            (opt := self._tmp_3(),)
+            (opt := self._tmp_5(),)
         ):
             return [name, opt];
         self._reset(mark)
@@ -276,7 +282,7 @@ class NNParser(Parser):
 
     @logger
     def expr(self) -> Optional[Any]:
-        # expr: func_expr | call_expr | NAME
+        # expr: func_expr | call_expr | ident_expr
         mark = self._mark()
         if (
             (func_expr := self.func_expr())
@@ -289,9 +295,9 @@ class NNParser(Parser):
             return call_expr;
         self._reset(mark)
         if (
-            (name := self.name())
+            (ident_expr := self.ident_expr())
         ):
-            return name;
+            return ident_expr;
         self._reset(mark)
         return None;
 
@@ -302,15 +308,15 @@ class NNParser(Parser):
         tok = self._tokenizer.peek()
         start_lineno, start_col_offset = tok.start
         if (
-            (self.sizetype_expr_list(),)
+            (sizetype_expr_list := self.sizetype_expr_list(),)
             and
-            (self.type_expr_list(),)
+            (type_expr_list := self.type_expr_list(),)
             and
             (self.expect('('))
             and
             (arg_decl_a := self.arg_decl())
             and
-            (arg_decl_b := self._loop0_4(),)
+            (arg_decl_b := self._loop0_6(),)
             and
             (self.expect(','),)
             and
@@ -320,7 +326,7 @@ class NNParser(Parser):
             and
             (type_expr := self.type_expr())
             and
-            (self._loop0_5(),)
+            (self._loop0_7(),)
             and
             (block_stmt := self.block_stmt())
         ):
@@ -334,20 +340,39 @@ class NNParser(Parser):
     def call_expr(self) -> Optional[Any]:
         # call_expr: expr '(' expr ((',' expr))* ','? ')'
         mark = self._mark()
+        tok = self._tokenizer.peek()
+        start_lineno, start_col_offset = tok.start
         if (
-            (expr := self.expr())
+            (left := self.expr())
             and
-            (literal := self.expect('('))
+            (self.expect('('))
             and
-            (expr_1 := self.expr())
+            (right_a := self.expr())
             and
-            (_loop0_6 := self._loop0_6(),)
+            (right_b := self._loop0_8(),)
             and
-            (opt := self.expect(','),)
+            (self.expect(','),)
             and
-            (literal_1 := self.expect(')'))
+            (self.expect(')'))
         ):
-            return [expr, literal, expr_1, _loop0_6, opt, literal_1];
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return CallExpression ( left , [right_a] + right_b , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
+        self._reset(mark)
+        return None;
+
+    @memoize
+    def ident_expr(self) -> Optional[Any]:
+        # ident_expr: NAME
+        mark = self._mark()
+        tok = self._tokenizer.peek()
+        start_lineno, start_col_offset = tok.start
+        if (
+            (name := self.name())
+        ):
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return IdentExpression ( name , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
@@ -355,14 +380,18 @@ class NNParser(Parser):
     def arg_decl(self) -> Optional[Any]:
         # arg_decl: NAME ':' type_expr
         mark = self._mark()
+        tok = self._tokenizer.peek()
+        start_lineno, start_col_offset = tok.start
         if (
             (name := self.name())
             and
-            (literal := self.expect(':'))
+            (self.expect(':'))
             and
             (type_expr := self.type_expr())
         ):
-            return [name, literal, type_expr];
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return ArgumentDecl ( name , type_expr , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
@@ -370,6 +399,8 @@ class NNParser(Parser):
     def type_expr(self) -> Optional[Any]:
         # type_expr: data_type_expr | func_type_expr
         mark = self._mark()
+        tok = self._tokenizer.peek()
+        start_lineno, start_col_offset = tok.start
         if (
             (data_type_expr := self.data_type_expr())
         ):
@@ -386,14 +417,18 @@ class NNParser(Parser):
     def data_type_expr(self) -> Optional[Any]:
         # data_type_expr: NAME sizetype_expr_list? type_expr_list?
         mark = self._mark()
+        tok = self._tokenizer.peek()
+        start_lineno, start_col_offset = tok.start
         if (
             (name := self.name())
             and
-            (opt := self.sizetype_expr_list(),)
+            (sizetype_expr_list := self.sizetype_expr_list(),)
             and
-            (opt_1 := self.type_expr_list(),)
+            (type_expr_list := self.type_expr_list(),)
         ):
-            return [name, opt, opt_1];
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return PrimitiveTypeExpr ( name , sizetype_expr_list , type_expr_list , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
@@ -406,13 +441,13 @@ class NNParser(Parser):
             and
             (opt_1 := self.type_expr_list(),)
             and
-            (_loop0_7 := self._loop0_7(),)
+            (_loop0_9 := self._loop0_9(),)
             and
             (literal := self.expect(':'))
             and
             (type_expr := self.type_expr())
         ):
-            return [opt, opt_1, _loop0_7, literal, type_expr];
+            return [opt, opt_1, _loop0_9, literal, type_expr];
         self._reset(mark)
         return None;
 
@@ -425,13 +460,13 @@ class NNParser(Parser):
             and
             (type_expr := self.type_expr())
             and
-            (_loop0_8 := self._loop0_8(),)
+            (_loop0_10 := self._loop0_10(),)
             and
             (opt := self.expect(','),)
             and
             (literal_1 := self.expect('>'))
         ):
-            return [literal, type_expr, _loop0_8, opt, literal_1];
+            return [literal, type_expr, _loop0_10, opt, literal_1];
         self._reset(mark)
         return None;
 
@@ -467,71 +502,32 @@ class NNParser(Parser):
             and
             (sizetype_expr := self.sizetype_expr())
             and
-            (_loop0_9 := self._loop0_9(),)
+            (_loop0_11 := self._loop0_11(),)
             and
             (opt := self.expect(','),)
             and
             (literal_1 := self.expect(']'))
         ):
-            return [literal, sizetype_expr, _loop0_9, opt, literal_1];
+            return [literal, sizetype_expr, _loop0_11, opt, literal_1];
         self._reset(mark)
         return None;
 
     @memoize
     def _loop1_1(self) -> Optional[Any]:
-        # _loop1_1: (NEWLINE* statement NEWLINE*)
+        # _loop1_1: statement
         mark = self._mark()
         children = []
         while (
-            (_tmp_10 := self._tmp_10())
+            (statement := self.statement())
         ):
-            children.append(_tmp_10)
+            children.append(statement)
             mark = self._mark()
         self._reset(mark)
         return children;
 
     @memoize
-    def _loop0_2(self) -> Optional[Any]:
-        # _loop0_2: (',' import_item)
-        mark = self._mark()
-        children = []
-        while (
-            (_tmp_11 := self._tmp_11())
-        ):
-            children.append(_tmp_11)
-            mark = self._mark()
-        self._reset(mark)
-        return children;
-
-    @memoize
-    def _tmp_3(self) -> Optional[Any]:
-        # _tmp_3: 'as' NAME
-        mark = self._mark()
-        if (
-            (literal := self.expect('as'))
-            and
-            (name := self.name())
-        ):
-            return [literal, name];
-        self._reset(mark)
-        return None;
-
-    @memoize
-    def _loop0_4(self) -> Optional[Any]:
-        # _loop0_4: (',' arg_decl)
-        mark = self._mark()
-        children = []
-        while (
-            (_tmp_12 := self._tmp_12())
-        ):
-            children.append(_tmp_12)
-            mark = self._mark()
-        self._reset(mark)
-        return children;
-
-    @memoize
-    def _loop0_5(self) -> Optional[Any]:
-        # _loop0_5: NEWLINE
+    def _loop1_2(self) -> Optional[Any]:
+        # _loop1_2: NEWLINE
         mark = self._mark()
         children = []
         while (
@@ -543,8 +539,47 @@ class NNParser(Parser):
         return children;
 
     @memoize
+    def _loop1_3(self) -> Optional[Any]:
+        # _loop1_3: NEWLINE
+        mark = self._mark()
+        children = []
+        while (
+            (_newline := self.expect('NEWLINE'))
+        ):
+            children.append(_newline)
+            mark = self._mark()
+        self._reset(mark)
+        return children;
+
+    @memoize
+    def _loop0_4(self) -> Optional[Any]:
+        # _loop0_4: (',' import_item)
+        mark = self._mark()
+        children = []
+        while (
+            (_tmp_12 := self._tmp_12())
+        ):
+            children.append(_tmp_12)
+            mark = self._mark()
+        self._reset(mark)
+        return children;
+
+    @memoize
+    def _tmp_5(self) -> Optional[Any]:
+        # _tmp_5: 'as' NAME
+        mark = self._mark()
+        if (
+            (literal := self.expect('as'))
+            and
+            (name := self.name())
+        ):
+            return [literal, name];
+        self._reset(mark)
+        return None;
+
+    @memoize
     def _loop0_6(self) -> Optional[Any]:
-        # _loop0_6: (',' expr)
+        # _loop0_6: (',' arg_decl)
         mark = self._mark()
         children = []
         while (
@@ -557,7 +592,20 @@ class NNParser(Parser):
 
     @memoize
     def _loop0_7(self) -> Optional[Any]:
-        # _loop0_7: ('(' type_expr ((',' type_expr))* ','? ')')
+        # _loop0_7: NEWLINE
+        mark = self._mark()
+        children = []
+        while (
+            (_newline := self.expect('NEWLINE'))
+        ):
+            children.append(_newline)
+            mark = self._mark()
+        self._reset(mark)
+        return children;
+
+    @memoize
+    def _loop0_8(self) -> Optional[Any]:
+        # _loop0_8: (',' expr)
         mark = self._mark()
         children = []
         while (
@@ -569,8 +617,8 @@ class NNParser(Parser):
         return children;
 
     @memoize
-    def _loop0_8(self) -> Optional[Any]:
-        # _loop0_8: (',' type_expr)
+    def _loop0_9(self) -> Optional[Any]:
+        # _loop0_9: ('(' type_expr ((',' type_expr))* ','? ')')
         mark = self._mark()
         children = []
         while (
@@ -582,8 +630,8 @@ class NNParser(Parser):
         return children;
 
     @memoize
-    def _loop0_9(self) -> Optional[Any]:
-        # _loop0_9: (',' sizetype_expr)
+    def _loop0_10(self) -> Optional[Any]:
+        # _loop0_10: (',' type_expr)
         mark = self._mark()
         children = []
         while (
@@ -595,23 +643,21 @@ class NNParser(Parser):
         return children;
 
     @memoize
-    def _tmp_10(self) -> Optional[Any]:
-        # _tmp_10: NEWLINE* statement NEWLINE*
+    def _loop0_11(self) -> Optional[Any]:
+        # _loop0_11: (',' sizetype_expr)
         mark = self._mark()
-        if (
-            (_loop0_17 := self._loop0_17(),)
-            and
-            (statement := self.statement())
-            and
-            (_loop0_18 := self._loop0_18(),)
+        children = []
+        while (
+            (_tmp_17 := self._tmp_17())
         ):
-            return [_loop0_17, statement, _loop0_18];
+            children.append(_tmp_17)
+            mark = self._mark()
         self._reset(mark)
-        return None;
+        return children;
 
     @memoize
-    def _tmp_11(self) -> Optional[Any]:
-        # _tmp_11: ',' import_item
+    def _tmp_12(self) -> Optional[Any]:
+        # _tmp_12: ',' import_item
         mark = self._mark()
         if (
             (literal := self.expect(','))
@@ -623,8 +669,8 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def _tmp_12(self) -> Optional[Any]:
-        # _tmp_12: ',' arg_decl
+    def _tmp_13(self) -> Optional[Any]:
+        # _tmp_13: ',' arg_decl
         mark = self._mark()
         if (
             (literal := self.expect(','))
@@ -636,8 +682,8 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def _tmp_13(self) -> Optional[Any]:
-        # _tmp_13: ',' expr
+    def _tmp_14(self) -> Optional[Any]:
+        # _tmp_14: ',' expr
         mark = self._mark()
         if (
             (literal := self.expect(','))
@@ -649,27 +695,27 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def _tmp_14(self) -> Optional[Any]:
-        # _tmp_14: '(' type_expr ((',' type_expr))* ','? ')'
+    def _tmp_15(self) -> Optional[Any]:
+        # _tmp_15: '(' type_expr ((',' type_expr))* ','? ')'
         mark = self._mark()
         if (
             (literal := self.expect('('))
             and
             (type_expr := self.type_expr())
             and
-            (_loop0_19 := self._loop0_19(),)
+            (_loop0_18 := self._loop0_18(),)
             and
             (opt := self.expect(','),)
             and
             (literal_1 := self.expect(')'))
         ):
-            return [literal, type_expr, _loop0_19, opt, literal_1];
+            return [literal, type_expr, _loop0_18, opt, literal_1];
         self._reset(mark)
         return None;
 
     @memoize
-    def _tmp_15(self) -> Optional[Any]:
-        # _tmp_15: ',' type_expr
+    def _tmp_16(self) -> Optional[Any]:
+        # _tmp_16: ',' type_expr
         mark = self._mark()
         if (
             (literal := self.expect(','))
@@ -681,8 +727,8 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def _tmp_16(self) -> Optional[Any]:
-        # _tmp_16: ',' sizetype_expr
+    def _tmp_17(self) -> Optional[Any]:
+        # _tmp_17: ',' sizetype_expr
         mark = self._mark()
         if (
             (literal := self.expect(','))
@@ -694,47 +740,21 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def _loop0_17(self) -> Optional[Any]:
-        # _loop0_17: NEWLINE
-        mark = self._mark()
-        children = []
-        while (
-            (_newline := self.expect('NEWLINE'))
-        ):
-            children.append(_newline)
-            mark = self._mark()
-        self._reset(mark)
-        return children;
-
-    @memoize
     def _loop0_18(self) -> Optional[Any]:
-        # _loop0_18: NEWLINE
+        # _loop0_18: (',' type_expr)
         mark = self._mark()
         children = []
         while (
-            (_newline := self.expect('NEWLINE'))
+            (_tmp_19 := self._tmp_19())
         ):
-            children.append(_newline)
+            children.append(_tmp_19)
             mark = self._mark()
         self._reset(mark)
         return children;
 
     @memoize
-    def _loop0_19(self) -> Optional[Any]:
-        # _loop0_19: (',' type_expr)
-        mark = self._mark()
-        children = []
-        while (
-            (_tmp_20 := self._tmp_20())
-        ):
-            children.append(_tmp_20)
-            mark = self._mark()
-        self._reset(mark)
-        return children;
-
-    @memoize
-    def _tmp_20(self) -> Optional[Any]:
-        # _tmp_20: ',' type_expr
+    def _tmp_19(self) -> Optional[Any]:
+        # _tmp_19: ',' type_expr
         mark = self._mark()
         if (
             (literal := self.expect(','))

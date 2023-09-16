@@ -1,10 +1,9 @@
 from node import Node
+from nn_ast.types.type_expr.func import FuncTypeExpr
+from nn_ast.types.type_expr.primitive import PrimitiveTypeExpr
 
-from typing import Union, TYPE_CHECKING
+from typing import Union
 
-if TYPE_CHECKING:
-    from nn_ast.types.type_expr.func import FuncTypeExpr
-    from nn_ast.types.type_expr.primitive import PrimitiveTypeExpr
 
 class TypeExpr(Node):
     def __init__(
