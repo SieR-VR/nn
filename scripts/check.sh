@@ -12,5 +12,5 @@ for file in `find $SCRIPT_DIR/../tests -name "*.nn"`;
 do
     REALPATH_FILE=$(realpath $file)
     echo -e "${BLUE}Checking $REALPATH_FILE${NC}"
-    python3 $SCRIPT_DIR/../nn_parser.py -qv $REALPATH_FILE 
+    python3 $SCRIPT_DIR/../src/index.py -qv $REALPATH_FILE 
 done
