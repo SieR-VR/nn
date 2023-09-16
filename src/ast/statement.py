@@ -15,16 +15,21 @@ class ImportStatement(Node):
         self.items = items
         self.path = path
 
-class ExprStatement(Node):
-    def __init__(self, expr: Expression, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.expr = expr
-
 class FuncStatement(Node):
     def __init__(self, name: str, func_expr: FuncExpression, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.name = name
         self.func_expr = func_expr
+
+class ExprStatement(Node):
+    def __init__(self, expr: Expression, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.expr = expr
+
+class ExportStatement(Node):
+    def __init__(self, items: list[str], *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.items = items
 
 class Statement(Node):
     def __init__(self, actual: Union[DeclStatement, ExprStatement], *args, **kwargs) -> None:
