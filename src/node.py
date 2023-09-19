@@ -9,7 +9,7 @@ class Node:
 
     def __init__(
         self,
-        source: SourceFile,
+        source_file: SourceFile,
         lineno: int,
         end_lineno: int,
         col_offset: int,
@@ -17,7 +17,7 @@ class Node:
     ) -> None:
         self.start = Pos(lineno, col_offset)
         self.end = Pos(end_lineno, end_col_offset)
-        self.source_file = source
+        self.source_file = source_file
 
     def __str__(self) -> str:
         return self.source_file[self.start : self.end]

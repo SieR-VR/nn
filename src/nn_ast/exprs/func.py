@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class FuncExpression(Node):
     def __init__(
         self,
-        sizeType: "SizeTypeExpr",
+        size_type: "SizeTypeExpr",
         type: "TypeExpr",
         arguments: list["ArgumentDecl"],
         return_type: "TypeExpr",
@@ -19,7 +19,7 @@ class FuncExpression(Node):
         **kwargs
     ) -> None:
         super().__init__(*args, **kwargs)
-        self.sizeType = sizeType
+        self.size_type = size_type
         self.type = type
         self.arguments = arguments
         self.return_type = return_type
