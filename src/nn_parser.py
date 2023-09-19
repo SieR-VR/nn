@@ -8,6 +8,7 @@ from nn_ast.stmts import *
 from nn_ast.exprs import *
 from nn_ast.types import *
 from nn_ast.types.type_expr import *
+from nn_ast.types.size_type_expr import *
 
 # Keywords and soft keywords are listed at the end of the parser definition.
 class NNParser(Parser):
@@ -130,7 +131,7 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def decl_stmt(self) -> Optional[Any]:
+    def decl_stmt(self) -> Optional[DeclStatement]:
         # decl_stmt: 'let' NAME ':' type_expr '=' expr ';'
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -157,7 +158,7 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def expr_stmt(self) -> Optional[Any]:
+    def expr_stmt(self) -> Optional[ExprStatement]:
         # expr_stmt: expr
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -172,7 +173,7 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def func_decl_stmt(self) -> Optional[Any]:
+    def func_decl_stmt(self) -> Optional[FuncStatement]:
         # func_decl_stmt: NAME func_expr
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -189,7 +190,7 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def import_stmt(self) -> Optional[Any]:
+    def import_stmt(self) -> Optional[ImportStatement]:
         # import_stmt: 'import' import_list 'from' import_dest
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -210,7 +211,7 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def export_stmt(self) -> Optional[Any]:
+    def export_stmt(self) -> Optional[ExportStatement]:
         # export_stmt: 'export' expr
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -269,14 +270,18 @@ class NNParser(Parser):
     def block_stmt(self) -> Optional[Any]:
         # block_stmt: '{' statements? '}'
         mark = self._mark()
+        tok = self._tokenizer.peek()
+        start_lineno, start_col_offset = tok.start
         if (
-            (literal := self.expect('{'))
+            (self.expect('{'))
             and
-            (opt := self.statements(),)
+            (stmts := self.statements(),)
             and
-            (literal_1 := self.expect('}'))
+            (self.expect('}'))
         ):
-            return [literal, opt, literal_1];
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return BlockStatement ( stmts , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
@@ -302,7 +307,7 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def func_expr(self) -> Optional[Any]:
+    def func_expr(self) -> Optional[FuncExpression]:
         # func_expr: sizetype_expr_list? type_expr_list? '(' arg_decl ((',' arg_decl))* ','? ')' ':' type_expr NEWLINE* block_stmt
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -332,12 +337,12 @@ class NNParser(Parser):
         ):
             tok = self._tokenizer.get_last_non_whitespace_token()
             end_lineno, end_col_offset = tok.end
-            return FuncExpression ( sizetype_expr_list , type_expr_list , [arg_decl_a] + arg_decl_b , type_expr , block_stmt , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
+            return FuncExpression ( sizetype_expr_list , type_expr_list , [arg_decl_a] + list ( map ( lambda x : x [1] , arg_decl_b ) ) , type_expr , block_stmt , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
     @memoize_left_rec
-    def call_expr(self) -> Optional[Any]:
+    def call_expr(self) -> Optional[CallExpression]:
         # call_expr: expr '(' expr ((',' expr))* ','? ')'
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -357,12 +362,12 @@ class NNParser(Parser):
         ):
             tok = self._tokenizer.get_last_non_whitespace_token()
             end_lineno, end_col_offset = tok.end
-            return CallExpression ( left , [right_a] + right_b , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
+            return CallExpression ( left , [right_a] + list ( map ( lambda x : x [1] , right_b ) ) , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
     @memoize
-    def ident_expr(self) -> Optional[Any]:
+    def ident_expr(self) -> Optional[IdentExpression]:
         # ident_expr: NAME
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -377,7 +382,7 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def arg_decl(self) -> Optional[Any]:
+    def arg_decl(self) -> Optional[ArgumentDecl]:
         # arg_decl: NAME ':' type_expr
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -396,7 +401,7 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def type_expr(self) -> Optional[Any]:
+    def type_expr(self) -> Optional[TypeExpr]:
         # type_expr: data_type_expr | func_type_expr
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -404,17 +409,21 @@ class NNParser(Parser):
         if (
             (data_type_expr := self.data_type_expr())
         ):
-            return data_type_expr;
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return TypeExpr ( data_type_expr , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         if (
             (func_type_expr := self.func_type_expr())
         ):
-            return func_type_expr;
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return TypeExpr ( func_type_expr , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
     @memoize
-    def data_type_expr(self) -> Optional[Any]:
+    def data_type_expr(self) -> Optional[PrimitiveTypeExpr]:
         # data_type_expr: NAME sizetype_expr_list? type_expr_list?
         mark = self._mark()
         tok = self._tokenizer.peek()
@@ -433,21 +442,33 @@ class NNParser(Parser):
         return None;
 
     @memoize
-    def func_type_expr(self) -> Optional[Any]:
-        # func_type_expr: sizetype_expr_list? type_expr_list? (('(' type_expr ((',' type_expr))* ','? ')'))* ':' type_expr
+    def func_type_expr(self) -> Optional[FuncTypeExpr]:
+        # func_type_expr: sizetype_expr_list? type_expr_list? '(' type_expr ((',' type_expr))* ','? ')' ':' type_expr
         mark = self._mark()
+        tok = self._tokenizer.peek()
+        start_lineno, start_col_offset = tok.start
         if (
-            (opt := self.sizetype_expr_list(),)
+            (sizetype_expr_list := self.sizetype_expr_list(),)
             and
-            (opt_1 := self.type_expr_list(),)
+            (type_expr_list := self.type_expr_list(),)
             and
-            (_loop0_9 := self._loop0_9(),)
+            (self.expect('('))
             and
-            (literal := self.expect(':'))
+            (arg_type_a := self.type_expr())
             and
-            (type_expr := self.type_expr())
+            (arg_type_b := self._loop0_9(),)
+            and
+            (self.expect(','),)
+            and
+            (self.expect(')'))
+            and
+            (self.expect(':'))
+            and
+            (return_type := self.type_expr())
         ):
-            return [opt, opt_1, _loop0_9, literal, type_expr];
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return FuncTypeExpr ( sizetype_expr_list , type_expr_list , [arg_type_a] + arg_type_b , return_type , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
@@ -456,17 +477,17 @@ class NNParser(Parser):
         # type_expr_list: '<' type_expr ((',' type_expr))* ','? '>'
         mark = self._mark()
         if (
-            (literal := self.expect('<'))
+            (self.expect('<'))
             and
-            (type_expr := self.type_expr())
+            (type_expr_a := self.type_expr())
             and
-            (_loop0_10 := self._loop0_10(),)
+            (type_expr_b := self._loop0_10(),)
             and
-            (opt := self.expect(','),)
+            (self.expect(','),)
             and
-            (literal_1 := self.expect('>'))
+            (self.expect('>'))
         ):
-            return [literal, type_expr, _loop0_10, opt, literal_1];
+            return [type_expr_a] + type_expr_b;
         self._reset(mark)
         return None;
 
@@ -474,22 +495,30 @@ class NNParser(Parser):
     def sizetype_expr(self) -> Optional[Any]:
         # sizetype_expr: '...' NAME | NUMBER | NAME
         mark = self._mark()
+        tok = self._tokenizer.peek()
+        start_lineno, start_col_offset = tok.start
         if (
-            (literal := self.expect('...'))
+            (self.expect('...'))
             and
             (name := self.name())
         ):
-            return [literal, name];
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return SizeTypeExpr ( SpreadSizeType ( name , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset ) , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         if (
             (number := self.number())
         ):
-            return number;
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return SizeTypeExpr ( NumberSizeType ( number , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset ) , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         if (
-            (name := self.name())
+            (ident := self.name())
         ):
-            return name;
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return SizeTypeExpr ( IdentSizeType ( ident , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset ) , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
@@ -497,18 +526,22 @@ class NNParser(Parser):
     def sizetype_expr_list(self) -> Optional[Any]:
         # sizetype_expr_list: '[' sizetype_expr ((',' sizetype_expr))* ','? ']'
         mark = self._mark()
+        tok = self._tokenizer.peek()
+        start_lineno, start_col_offset = tok.start
         if (
-            (literal := self.expect('['))
+            (self.expect('['))
             and
-            (sizetype_expr := self.sizetype_expr())
+            (sizetype_expr_a := self.sizetype_expr())
             and
-            (_loop0_11 := self._loop0_11(),)
+            (sizetype_expr_b := self._loop0_11(),)
             and
-            (opt := self.expect(','),)
+            (self.expect(','),)
             and
-            (literal_1 := self.expect(']'))
+            (self.expect(']'))
         ):
-            return [literal, sizetype_expr, _loop0_11, opt, literal_1];
+            tok = self._tokenizer.get_last_non_whitespace_token()
+            end_lineno, end_col_offset = tok.end
+            return SizeType ( [sizetype_expr_a] + list ( map ( lambda x : x [1] , sizetype_expr_b ) ) , self . source_file , lineno=start_lineno, col_offset=start_col_offset, end_lineno=end_lineno, end_col_offset=end_col_offset );
         self._reset(mark)
         return None;
 
@@ -618,7 +651,7 @@ class NNParser(Parser):
 
     @memoize
     def _loop0_9(self) -> Optional[Any]:
-        # _loop0_9: ('(' type_expr ((',' type_expr))* ','? ')')
+        # _loop0_9: (',' type_expr)
         mark = self._mark()
         children = []
         while (
@@ -696,20 +729,14 @@ class NNParser(Parser):
 
     @memoize
     def _tmp_15(self) -> Optional[Any]:
-        # _tmp_15: '(' type_expr ((',' type_expr))* ','? ')'
+        # _tmp_15: ',' type_expr
         mark = self._mark()
         if (
-            (literal := self.expect('('))
+            (literal := self.expect(','))
             and
             (type_expr := self.type_expr())
-            and
-            (_loop0_18 := self._loop0_18(),)
-            and
-            (opt := self.expect(','),)
-            and
-            (literal_1 := self.expect(')'))
         ):
-            return [literal, type_expr, _loop0_18, opt, literal_1];
+            return [literal, type_expr];
         self._reset(mark)
         return None;
 
@@ -736,32 +763,6 @@ class NNParser(Parser):
             (sizetype_expr := self.sizetype_expr())
         ):
             return [literal, sizetype_expr];
-        self._reset(mark)
-        return None;
-
-    @memoize
-    def _loop0_18(self) -> Optional[Any]:
-        # _loop0_18: (',' type_expr)
-        mark = self._mark()
-        children = []
-        while (
-            (_tmp_19 := self._tmp_19())
-        ):
-            children.append(_tmp_19)
-            mark = self._mark()
-        self._reset(mark)
-        return children;
-
-    @memoize
-    def _tmp_19(self) -> Optional[Any]:
-        # _tmp_19: ',' type_expr
-        mark = self._mark()
-        if (
-            (literal := self.expect(','))
-            and
-            (type_expr := self.type_expr())
-        ):
-            return [literal, type_expr];
         self._reset(mark)
         return None;
 
