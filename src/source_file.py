@@ -1,5 +1,6 @@
 from utils import Pos
 
+
 class SourceFile:
     path: str
     content: list[str]
@@ -15,9 +16,9 @@ class SourceFile:
 
         for line in range(start.line, end.line + 1):
             if line == start.line:
-                result += self.content[line][start.col:]
+                result += self.content[line][start.col :]
             elif line == end.line:
-                result += self.content[line][:end.col]
+                result += self.content[line][: end.col]
             else:
                 result += self.content[line]
 

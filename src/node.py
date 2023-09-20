@@ -2,6 +2,7 @@ from source_file import SourceFile
 from utils import Pos
 import json
 
+
 class Node:
     start: Pos
     end: Pos
@@ -23,4 +24,6 @@ class Node:
         return self.source_file[self.start : self.end]
 
     def toJSON(self, indent=2) -> dict:
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=indent)
+        return json.dumps(
+            self, default=lambda o: o.__dict__, sort_keys=True, indent=indent
+        )
