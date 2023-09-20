@@ -1,0 +1,11 @@
+[project]
+name = "nn"
+version = "0.0.0"
+description = "A DSL for neural networks"
+license = "MIT"
+authors = [{ name = "SieR", email = "<nwh040512@gmail.com>" }]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+exclude = "nn_parser.py"

@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from nn_ast.types.type_expr import TypeExpr
     from nn_ast.types.generic_type import GenericType
 
+
 class FuncTypeExpr(Node):
     def __init__(
         self,
@@ -14,7 +15,7 @@ class FuncTypeExpr(Node):
         param_list: list["TypeExpr"],
         return_type: "TypeExpr",
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.size_type = size_type

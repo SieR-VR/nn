@@ -11,7 +11,7 @@ class SizeTypeExpr(Node):
         self,
         actual: Union[IdentSizeType, NumberSizeType, SpreadSizeType],
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.actual = actual

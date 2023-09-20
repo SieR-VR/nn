@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 import time
 import token
 import tokenize
@@ -8,6 +7,7 @@ import argparse
 
 from pegen.tokenizer import Tokenizer
 from nn_parser import NNParser
+
 
 def simple_parser_main() -> None:
     argparser = argparse.ArgumentParser()
@@ -21,7 +21,9 @@ def simple_parser_main() -> None:
     argparser.add_argument(
         "-q", "--quiet", action="store_true", help="Don't print the parsed program"
     )
-    argparser.add_argument("-r", "--run", action="store_true", help="Run the parsed program")
+    argparser.add_argument(
+        "-r", "--run", action="store_true", help="Run the parsed program"
+    )
     argparser.add_argument("filename", help="Input file ('-' to use stdin)")
 
     args = argparser.parse_args()
@@ -74,6 +76,7 @@ def simple_parser_main() -> None:
         print("Caches sizes:")
         print(f"  token array : {len(tokenizer._tokens):10}")
         print(f"        cache : {len(parser._cache):10}")
+
 
 if __name__ == "__main__":
     simple_parser_main()
