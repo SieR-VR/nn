@@ -4,6 +4,10 @@ jobs:
   black-lint:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
       - name: Action Lint
         uses: panda0603/lint-action@1.6.3
         with:
