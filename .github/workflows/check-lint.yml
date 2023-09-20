@@ -8,8 +8,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10' 
-      - name: Action Lint
-        uses: panda0603/lint-action@1.6.3
-        with:
-          github_token: ${{ secrets.github_token }}
-          black: true
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Check lint with black
+        run: |
+          python3 -m black --check
