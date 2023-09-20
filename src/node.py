@@ -30,5 +30,8 @@ class Node:
 
     def toJSON(self, indent=2) -> dict:
         return json.dumps(
-            self, default=lambda o: add_class_type_to_dict(o.__dict__, o), sort_keys=True, indent=indent
+            self,
+            default=lambda o: add_class_type_to_dict(o.__dict__, o),
+            sort_keys=True,
+            indent=indent,
         )

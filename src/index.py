@@ -57,7 +57,9 @@ def simple_parser_main() -> None:
 
     t1 = time.time()
 
-    with open(f"{os.path.dirname(filename)}/out/{os.path.basename(filename)}.json", "w") as f:
+    with open(
+        f"{os.path.dirname(filename)}/out/{os.path.basename(filename)}.json", "w"
+    ) as f:
         f.write(tree.toJSON())
 
     if verbose:
