@@ -2,6 +2,7 @@ from pegen.parser import Parser
 from pegen.tokenizer import Tokenizer
 from source_file import SourceFile
 
+
 class ParserBase(Parser):
     source_file: SourceFile
 

@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from types.size_type_expr import SizeTypeExpr
     from types.type_expr import TypeExpr
 
+
 class FuncExpression(Node):
     def __init__(
         self,
@@ -16,7 +17,7 @@ class FuncExpression(Node):
         return_type: "TypeExpr",
         block: "BlockStatement",
         *args,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.size_type = size_type
