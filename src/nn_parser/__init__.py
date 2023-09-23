@@ -1,6 +1,6 @@
 
 from pegen.parser import memoize, memoize_left_rec, logger
-from parser_base import ParserBase as Parser
+from nn_parser.parser_base import ParserBase as Parser
 from typing import Any, Optional
 
 from nn_ast import *
