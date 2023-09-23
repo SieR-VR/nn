@@ -1,0 +1,3 @@
+entry(x: Tensor, a: Tensor, b: Tensor) {
+	Add(MatMul(x, a), b)
+}

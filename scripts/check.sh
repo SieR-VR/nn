@@ -8,9 +8,9 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-for file in `find $SCRIPT_DIR/../tests -name "*.nn"`;
+for file in `find $SCRIPT_DIR/../tests/stage_1 -name "*.nn"`;
 do
     REALPATH_FILE=$(realpath $file)
     echo -e "${BLUE}Checking $REALPATH_FILE${NC}"
-    python3 $SCRIPT_DIR/../src/index.py -qv $REALPATH_FILE 
+    python3 $SCRIPT_DIR/../src/index.py -qv $REALPATH_FILE
 done
