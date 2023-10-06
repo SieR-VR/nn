@@ -7,7 +7,7 @@ import argparse
 
 from pegen.tokenizer import Tokenizer
 from nn_parser import NNParser
-
+from nn_visitor import visit
 
 def simple_parser_main() -> None:
     argparser = argparse.ArgumentParser()
@@ -44,6 +44,13 @@ def simple_parser_main() -> None:
         tokenizer = Tokenizer(tokengen, verbose=verbose_tokenizer)
         parser = NNParser(tokenizer, verbose=verbose_parser)
         tree = parser.start()
+        inputs, outputs, call_nodes = visit(tree)
+
+        print(tree)
+        print(f"Inputs: {inputs}")
+        print(f"Outputs: {outputs}")
+        print(f"Call nodes: {call_nodes}")
+
         try:
             if file.isatty():
                 endpos = 0

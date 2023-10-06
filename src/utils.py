@@ -24,7 +24,7 @@ class ValueID:
     def __init__(self, target: "Node") -> None:
         self.source_file = target.source_file
         self.pos = target.start, target.end
-        self.name = target.name
+        self.name = target.name if hasattr(target, "name") else None
 
     def __str__(self) -> str:
         source_hash = sha1(self.source_file.__str__().encode()).hexdigest()
