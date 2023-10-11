@@ -7,7 +7,7 @@ import argparse
 
 from pegen.tokenizer import Tokenizer
 from nn_parser import NNParser
-from nn_visitor import visit
+from sample_visitor import visit
 
 def simple_parser_main() -> None:
     argparser = argparse.ArgumentParser()

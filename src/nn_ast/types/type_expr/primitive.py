@@ -7,9 +7,9 @@ from tokenize import TokenInfo
 class PrimitiveTypeExpr(Node):
     def __init__(
         self,
-        type_name: TokenInfo,
-        size_type: SizeType,
-        generic_type: GenericType,
+        type_name: TokenInfo ,
+        size_type: SizeType | None,
+        generic_type: GenericType | None,
         *args,
         **kwargs,
     ) -> None:

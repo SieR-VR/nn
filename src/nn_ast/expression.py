@@ -1,11 +1,14 @@
 from node import Node
 from typing import Union, TYPE_CHECKING
 
+from nn_type_checker import CheckedType
+
 if TYPE_CHECKING:
     from nn_ast.exprs import CallExpression, FuncExpression, IdentExpression
 
-
 class Expression(Node):
+    checked_type: CheckedType = None
+
     def __init__(
         self,
         actual: Union["CallExpression", "FuncExpression", "IdentExpression"],
