@@ -2,7 +2,7 @@ from node import Node
 from nn_ast import Source
 from nn_ast.argument_decl import ArgumentDecl
 from nn_ast.expression import Expression, CallExpression, FuncExpression, IdentExpression
-from nn_ast.types.type_expr import TypeExpr, FuncTypeExpr, PrimitiveTypeExpr,
+from nn_ast.types.type_expr import TypeExpr, FuncTypeExpr, PrimitiveTypeExpr
 from nn_ast.types.size_type import SizeType
 from nn_ast.types.size_type_expr import SizeTypeExpr, NumberSizeType
 
@@ -55,6 +55,7 @@ class CheckedType:
 class TypeChecker:
     def __init__(self, source: "Source"):
         self.source = source
+        self.vertexes = self.get_vertexes()
 
     def get_vertexes(self) -> list["Expression" | "ArgumentDecl"]:
         def visitor(node: "Node") -> list["Expression" | "ArgumentDecl"]:
@@ -69,9 +70,7 @@ class TypeChecker:
         return visit_recursively(self.source, visitor)
 
     def set_from_explicit(self):
-        vertexes = self.get_vertexes()
-
-        for vertex in vertexes:
+        for vertex in self.vertexes:
             vertex = vertex.actual if isinstance(vertex, Expression) else vertex
 
             match vertex:
@@ -82,4 +81,7 @@ class TypeChecker:
                 case IdentExpression():
                     pass
                 case ArgumentDecl():
-                    vertex.checked_type = CheckedType()
+                    vertex.checked_type = CheckedType.from_typeexpr(vertex.type)
+
+    def set_from_scope(self):
+        pass
