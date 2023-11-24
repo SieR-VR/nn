@@ -1,11 +1,20 @@
-[project]
+[tool.poetry]
 name = "nn"
-version = "0.0.0"
+version = "0.1.0"
 description = "A DSL for neural networks"
 license = "MIT"
-authors = [{ name = "SieR", email = "<nwh040512@gmail.com>" }]
+authors = ["SieR <nwh040512@gmail.com>"]
+readme = "README.md"
+packages = [
+    { include = "nn_ast", from = "src" }
+]
 
 [tool.black]
 line-length = 88
 target-version = ['py310']
 exclude = "nn_parser.py"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pegen = "^0.3.0"
+black = "^23.11.0"
