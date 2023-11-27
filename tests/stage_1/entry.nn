@@ -1,3 +1,0 @@
-entry(x: Tensor[1], a: Tensor[1, 1], b: Tensor[1]): Tensor[1] {
-	Add(MatMul(x, a), b)
-}
