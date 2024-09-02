@@ -6,3 +6,6 @@ compose-dev.yaml
 
 # Build result
 lib
+
+# Auto-generated files
+./src/ohm/*bundle*
