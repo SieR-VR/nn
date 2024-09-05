@@ -1,4 +1,5 @@
 # packages
+.yarn
 node_modules
 
 # IDEs and editors

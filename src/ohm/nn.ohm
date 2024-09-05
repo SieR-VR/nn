@@ -1,93 +1,43 @@
-Program {
-  TopLevelFunction
-    = ident Function
-
-  Function
-  	= SizeArguments<SizeType>? TypeArguments<PrimitiveType>? Arguments<Argument> Typed? Block
+SourceCode {
+	Declaration = identifier SizeDecls? Arguments "=" "|>"? Expression ("|>" Expression)*
     
-  Block
-  	= "{" Statement* "}"
-    
-  Statement
-   = LetStatement
-   | ReturnStatement
-   
-  LetStatement
-   = "let" ident Typed? "=" Expression ";"
-   
-  ReturnStatement
-   = Expression
-    
-  Expression
-  	= ArithmeticExpression
-    | FunctionExpression
-    
-  FunctionExpression
-   	= Function
-       
-  ArithmeticExpression
-   = ArithmeticExpression "+" PrimaryExpression -- plus
-   | ArithmeticExpression "-" PrimaryExpression -- minus
-   | ArithmeticExpression "*" PrimaryExpression -- multiply
-   | PrimaryExpression
-   
-  PrimaryExpression
-   = "(" Expression ")"    -- paren
-   | "-" PrimaryExpression -- neg
-   | CallExpression        -- call
-   | IdentExpression
-   | NumberExpression
+  Expression = TupleExpression
   
-  IdentExpression
-   = ident
-   
-  CallExpression
-   = ident Arguments<Expression>
-   
-  NumberExpression
-   = number
-
-  Argument
-  	= ident Typed?
-
-  Type
-  	= TensorType
-    | PrimitiveType
-    | FunctionType
-    
-  SizeType
-  	= ident
-    | number
-    | "..." ident -- destructure
-   
-  TensorType
-  	= "Tensor" SizeArguments<SizeType> TypeArguments<PrimitiveType>?
-    
-  PrimitiveType
-  	= ident 
-    
-  FunctionType
-    = SizeArguments<SizeType>? TypeArguments<PrimitiveType>? Arguments<Type> Typed?
-    
-  Arguments<Arg>
-  	= "(" ElementsList<Arg, ","> ")"
+  StringLiteralExpression = string
+  IdentifierExpression = identifier -- ident
+    | StringLiteralExpression
+  CallExpression = identifier SizeType? "(" ListOf<Expression, ","> ")" -- call
+    | IdentifierExpression
+  TupleExpression = Expression ( "," Expression ) + -- tuple
+    | CallExpression
   
-  TypeArguments<Type>
-    = "<" ElementsList<Type, ","> ">"
-    
-  SizeArguments<Size>
-  	= "[" ElementsList<Size, ","> "]"
-    
-  Typed
-  	= ":" Type
+  Arguments = "(" ListOf<ArgumentDeclaration, ","> ")"
+  ArgumentDeclaration = identifier ":" Type
   
-  ElementsList<Element, seperator>
-  	= Element (seperator Element)*
-    
-  ident  (an identifier)
-    = letter (alnum | "_")*
+  Type = identifier SizeType?
+  SizeType = "[" ListOf<Size, ","> "]"
+  Size = PowerSize
 
-  number  (a number)
-    = digit* "." digit+  -- fract
-    | digit+             -- whole
+  SizeDecls = "[" ListOf<identifier, ","> "]"
+  
+  SimpleSize = number | identifier
+  ParenSize = "(" Size ")" -- paren
+    | SimpleSize
+  AddSize = Size "+" Size -- add
+    | ParenSize
+  MultipleSize = Size "*" Size -- mul
+    | AddSize
+    PowerSize = Size "^" Size -- pow
+    | MultipleSize
+  
+  string = singleQuoteString | doubleQuoteString 
+  singleQuoteString = "'" identifier "'"
+  doubleQuoteString = "\"" identifier "\""
+  
+  identifier = identifierName
+  identifierName = identifierStart identifierPart*
+  identifierStart = "_" | "$" | letter
+  identifierPart = identifierStart | digit
+  
+  number = "1".."9" digit*
 }
