@@ -12,11 +12,12 @@ export const nnGrammar = ohm.grammar(
 );
 
 const source = `
-Linear[channel](x: Tensor) = 
-  x, Trainable('weight')
-  |> MatMul(), Trainable('bias')
+Linear[input, channel](x: Tensor[input]) = 
+  x, Trainable[input, channel]('weight')
+  |> MatMul(), Trainable[channel]('bias')
   |> Bias()
 `
+
 
 const ast = nnGrammar.match(source);
 
@@ -31,13 +32,16 @@ const mapping = {
     sizeDeclList: (children) => ({ type: "SizeDeclList", decls: children[1].toAST(mapping) }),
     argumentList: (children) => ({ type: "ArgumentList", args: children[2].toAST(mapping) }),
     firstPipe: 4,
-    firstExpr: 5,
-    otherExprs: 7
+    exprs: (children) => [children[5].toAST(mapping), ...children[7].toAST(mapping)],
   },
 
   Expression: 0,
 
-  TupleExpression_tuple: { type: "TupleExpression", firstElement: 0, otherElements: 2 },
+  TupleExpression_tuple: { 
+    type: "TupleExpression", 
+    elements: (children) => [children[0].toAST(mapping), ...children[2].toAST(mapping)],
+  },
+
   CallExpression_call: { type: "CallExpression", callee: 0, sizes: 1, arguments: 3 },
   IdentifierExpression_ident: { type: "IdentifierExpression", ident: 0 },
   StringLiteralExpression: { value: 0 },
@@ -46,49 +50,21 @@ const mapping = {
 
   Type: { isTensor: true, sizes: 1 },
 
-  singleQuoteString: { type: "string", value: 0 },
-  doubleQuoteString: { type: "string", value: 0 },
+  string: 0,
+  singleQuoteString: 1,
+  doubleQuoteString: 1,
 }
 
 const result = toAST(ast, mapping) as Record<string, any>;
-
-const travel = (node: any) => {
-  if (typeof node === 'string' || !("type" in node)) return
-
-  if (node.type === "Declaration") {
-    node.exprs = [node.firstExpr, ...node.otherExprs];
-    delete node.firstExpr;
-    delete node.otherExprs;
-  }
-
-  if (node.type === "TupleExpression") {
-    node.elements = [node.firstElement, ...node.otherElements];
-    delete node.firstElement;
-    delete node.otherElements;
-  }
-
-  const keys = Object.keys(node);
-  keys.forEach((key) => {
-    if (!node[key]) return;
-
-    if (Array.isArray(node[key])) {
-      node[key].forEach((child: any) => {
-        travel(child);
-      });
-    } else if (typeof node[key] === "object") {
-      travel(node[key]);
-    }
-  });
-}
-
-travel(result);
 const decl = result as Declaration;
 
 const python = synth.py`
 class ${decl.name}:
   def __init__(self, ${decl.sizeDeclList}):
+    ${synth.py.inits(decl)}
     
   def __call__(self, ${decl.argumentList}):
+    ${synth.py.forward(decl)}
 `
 
 console.log(python);
