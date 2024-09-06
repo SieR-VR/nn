@@ -2963,6 +2963,7 @@ __metadata:
     "@types/node": "npm:^20.1.7"
     jest: "npm:^29.5.0"
     ohm-js: "npm:^17.1.0"
+    ts-features: "npm:^1.3.5"
     ts-jest: "npm:^29.1.0"
     ts-node: "npm:^10.9.1"
     typescript: "npm:^5.5.4"
@@ -3619,6 +3620,13 @@ __metadata:
   dependencies:
     is-number: "npm:^7.0.0"
   checksum: 10c0/487988b0a19c654ff3e1961b87f471702e708fa8a8dd02a298ef16da7206692e8552a0250e8b3e8759270f62e9d8314616f6da274734d3b558b1fc7b7724e892
+  languageName: node
+  linkType: hard
+
+"ts-features@npm:^1.3.5":
+  version: 1.3.5
+  resolution: "ts-features@npm:1.3.5"
+  checksum: 10c0/75b8447e1d8e68397e3023489470b3b988b6c26a50200b9456e5600bb55ff576c96b8df1f102b62a5f89c3dad894b160db726480feb638a8a5c32d3ec5631300
   languageName: node
   linkType: hard
 
