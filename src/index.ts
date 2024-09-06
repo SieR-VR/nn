@@ -18,7 +18,6 @@ Linear[input, channel](x: Tensor[input]) =
   |> Bias()
 `
 
-
 const ast = nnGrammar.match(source);
 
 if (ast.failed()) {
@@ -42,7 +41,7 @@ const mapping = {
     elements: (children) => [children[0].toAST(mapping), ...children[2].toAST(mapping)],
   },
 
-  CallExpression_call: { type: "CallExpression", callee: 0, sizes: 1, arguments: 3 },
+  CallExpression_call: { type: "CallExpression", callee: 0, sizes: 1, args: 3 },
   IdentifierExpression_ident: { type: "IdentifierExpression", ident: 0 },
   StringLiteralExpression: { value: 0 },
 
@@ -67,4 +66,5 @@ class ${decl.name}:
     ${synth.py.forward(decl)}
 `
 
+console.log(source);
 console.log(python);

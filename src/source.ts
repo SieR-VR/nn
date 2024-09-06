@@ -17,7 +17,7 @@ export interface IdentifierExpression {
 export interface CallExpression {
     callee: string
     sizes: (string | number)[]
-    arguments: Expression[]
+    args: Expression[]
 
     type: "CallExpression"
 }
@@ -71,15 +71,15 @@ export function travel<T>(node: Node, callback: (node: Node) => T | undefined): 
             result.push(res)
         }
 
-        if ("exprs" in node) {
+        if (node.type === "Declaration") {
             node.exprs.forEach(_travel)
         }
 
-        if ("arguments" in node) {
-            node.arguments.forEach(_travel)
+        if (node.type === "CallExpression") {
+            node.args.forEach(_travel)
         }
 
-        if ("elements" in node) {
+        if (node.type === "TupleExpression") {
             node.elements.forEach(_travel)
         }
     }

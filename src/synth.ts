@@ -1,9 +1,10 @@
-import { ArgumentList, Declaration, Node, SizeDeclList, StringLiteralExpression, travel, Type } from "./source"
+import { match_string } from "ts-features"
+import { ArgumentList, CallExpression, Declaration, Expression, IdentifierExpression, Node, SizeDeclList, StringLiteralExpression, travel, TupleExpression, Type } from "./source"
 
 const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]) => {
   const convertType = (type: Type) => {
     if (!type.isTensor) {
-      // !TODO
+      // TODO if type is not tensor
       throw new Error("Not Implemented")
     }
 
@@ -50,7 +51,7 @@ const pyinits = (decl: Declaration, indent: number = 4) => {
   const inits = calls
     .filter((call) => call.callee === 'Trainable')
     .map((call) => {
-      const [name] = call.arguments as [StringLiteralExpression]
+      const [name] = call.args as [StringLiteralExpression]
 
       return `self.${name.value} = Tensor.zeros(${call.sizes.join(", ")})`
     })
@@ -61,13 +62,85 @@ const pyinits = (decl: Declaration, indent: number = 4) => {
 }
 
 const pyforward = (decl: Declaration, indent: number = 4) => {
-  const result = ""
+  const result = []
+  let returns = decl.firstPipe
+    ? decl.argumentList.args.map((arg) => arg.ident)
+    : []
+
+  const toPythonExpression = (expr: Expression | string) => {
+    if (typeof expr === 'string') {
+      return expr
+    }
+
+    return match_string<string, Expression['type']>(expr.type, { 
+      CallExpression: () => {
+        const { callee, args } = expr as CallExpression
+        
+        if (callee === 'Trainable') {
+          const { value } = (expr as CallExpression).args[0] as StringLiteralExpression
+          return `self.${value}`
+        }
+
+        const right = [...returns, ...args].map(toPythonExpression)
+
+        return `${callee}(${right.join(", ")})`
+      },
+      IdentifierExpression: () => {
+        return (expr as IdentifierExpression).ident
+      },
+      StringLiteralExpression: () => {
+        throw new Error("Unreachable StringLiteralExpression as code")
+      },
+      TupleExpression: () => {
+        return `${(expr as TupleExpression).elements.map(toPythonExpression).join(", ")}`
+      },
+    })
+  }
+
 
   decl.exprs.forEach((expr) => {
-    
+    const [line, returns_] = match_string<[string, string[]], Expression['type']>(expr.type, {
+      CallExpression: () => {
+        return [
+          `y = ${toPythonExpression(expr)}`,
+          ['y']
+        ]
+      },
+      IdentifierExpression: () => {
+        return [
+          `${(expr as IdentifierExpression).ident}`,
+          [`${(expr as IdentifierExpression).ident}`]
+        ]
+      },
+      StringLiteralExpression: () => {
+        throw new Error("Unreachable StringLiteralExpression as code")
+      },
+      TupleExpression: () => {
+        if ((expr as TupleExpression).elements[0].type === 'CallExpression') {
+          const [first, ...rest] = (expr as TupleExpression).elements
+
+          return [
+            `y = ${toPythonExpression(first)}`,
+            ['y', ...rest.map(toPythonExpression)]
+          ]
+        }
+
+        return [
+          "",
+          (expr as TupleExpression).elements.map(toPythonExpression)
+        ]
+      },
+    })
+
+    if (line) result.push(line)
+    returns = returns_
   })
 
-  return result
+  const lastLine = `return ${returns.join(", ")}`
+  result.push(lastLine)
+
+  const indentStr = " ".repeat(indent)
+  return result.join(`\n${indentStr}`)
 }
 
 py.inits = pyinits
