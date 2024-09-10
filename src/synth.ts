@@ -1,8 +1,8 @@
 import { match_string } from "ts-features"
-import { ArgumentList, CallExpression, Declaration, Expression, IdentifierExpression, Node, SizeDeclList, StringLiteralExpression, travel, TupleExpression, Type } from "./source"
+import { ArgumentList, CallExpression, Declaration, Expression, IdentifierExpression, Node, SizeDeclList, StringLiteralExpression, travel, TupleExpression, TypeNode } from "../packages/nn-language/parser/ast"
 
 const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]) => {
-  const convertType = (type: Type) => {
+  const convertType = (type: TypeNode) => {
     if (!type.isTensor) {
       // TODO if type is not tensor
       throw new Error("Not Implemented")
@@ -72,10 +72,10 @@ const pyforward = (decl: Declaration, indent: number = 4) => {
       return expr
     }
 
-    return match_string<string, Expression['type']>(expr.type, { 
+    return match_string<string, Expression['type']>(expr.type, {
       CallExpression: () => {
         const { callee, args } = expr as CallExpression
-        
+
         if (callee === 'Trainable') {
           const { value } = (expr as CallExpression).args[0] as StringLiteralExpression
           return `self.${value}`

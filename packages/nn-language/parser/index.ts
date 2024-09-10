@@ -2,28 +2,13 @@ import * as ohm from "ohm-js";
 import { toAST } from "ohm-js/extras"
 
 import { readFileSync } from "fs";
-import { exit } from "process";
+import { Declaration } from "./ast";
 
-import { Declaration } from "./source";
-import { synth } from "./synth";
+import { Result, Ok, Err } from "ts-features";
 
-export const nnGrammar = ohm.grammar(
+export const grammar = ohm.grammar(
   readFileSync("./src/ohm/nn.ohm", "utf8")
 );
-
-const source = `
-Linear[input, channel](x: Tensor[input]) = 
-  x, Trainable[input, channel]('weight')
-  |> MatMul(), Trainable[channel]('bias')
-  |> Bias()
-`
-
-const ast = nnGrammar.match(source);
-
-if (ast.failed()) {
-  console.error("Syntax error");
-  exit(1);
-}
 
 const mapping = {
   Declaration: {
@@ -47,24 +32,19 @@ const mapping = {
 
   ArgumentDeclaration: { ident: 0, valueType: 2 },
 
-  Type: { isTensor: true, sizes: 1 },
+  Type: { type: "TypeNode", isTensor: true, sizes: 1 },
 
   string: 0,
   singleQuoteString: 1,
   doubleQuoteString: 1,
 }
 
-const result = toAST(ast, mapping) as Record<string, any>;
-const decl = result as Declaration;
+export function parse(input: string): Result<Declaration, string> {
+  const match = grammar.match(input);
+  if (match.failed()) {
+    return Err(match.message);
+  }
 
-const python = synth.py`
-class ${decl.name}:
-  def __init__(self, ${decl.sizeDeclList}):
-    ${synth.py.inits(decl)}
-    
-  def __call__(self, ${decl.argumentList}):
-    ${synth.py.forward(decl)}
-`
-
-console.log(source);
-console.log(python);
+  const ast = toAST(match, mapping) as Declaration;
+  return Ok(ast);
+}

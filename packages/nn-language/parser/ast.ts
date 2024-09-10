@@ -37,16 +37,16 @@ export interface StringLiteralExpression {
 export type Expression = IdentifierExpression | CallExpression | TupleExpression | StringLiteralExpression
 
 export interface ArgumentList {
-    args: { ident: string, valueType: Type }[]
+    args: { ident: string, valueType: TypeNode }[]
 
     type: "ArgumentList"
 }
 
-export interface Type {
+export interface TypeNode {
     isTensor: boolean // true
     sizes: (string | number)[]
 
-    type: "Type"
+    type: "TypeNode"
 }
 
 export interface SizeDeclList {
@@ -59,7 +59,7 @@ export type Node =
     | Declaration
     | Expression
     | ArgumentList
-    | Type
+    | TypeNode
     | SizeDeclList
 
 export function travel<T>(node: Node, callback: (node: Node) => T | undefined): T[] {
@@ -86,4 +86,27 @@ export function travel<T>(node: Node, callback: (node: Node) => T | undefined): 
 
     _travel(node)
     return result
+}
+
+export function isDeclaration(node: Node): node is Declaration {
+    return node.type === "Declaration"
+}
+
+export function isExpression(node: Node): node is Expression {
+    return node.type === "IdentifierExpression"
+        || node.type === "CallExpression"
+        || node.type === "TupleExpression"
+        || node.type === "StringLiteralExpression"
+}
+
+export function isArgumentList(node: Node): node is ArgumentList {
+    return node.type === "ArgumentList"
+}
+
+export function isTypeNode(node: Node): node is TypeNode {
+    return node.type === "TypeNode"
+}
+
+export function isSizeDeclList(node: Node): node is SizeDeclList {
+    return node.type === "SizeDeclList"
 }

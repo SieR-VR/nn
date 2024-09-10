@@ -1,0 +1,8 @@
+{
+  "name": "nn-language-server",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "vscode-languageserver": "^9.0.1"
+  }
+}

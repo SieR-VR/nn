@@ -1,0 +1,15 @@
+{
+  "name": "nn-language",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "ohm-js": "^17.1.0"
+  },
+  "devDependencies": {
+    "@ohm-js/cli": "^2.0.0"
+  },
+  "scripts": {
+    "build:ohm": "yarn ohm generateBundles --withTypes ./parser/nn.ohm",
+    "build": "yarn build:ohm && tsc"
+  }
+}
