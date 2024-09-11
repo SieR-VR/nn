@@ -2989,6 +2989,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"nn-type-checker@workspace:packages/nn-type-checker":
+  version: 0.0.0-use.local
+  resolution: "nn-type-checker@workspace:packages/nn-type-checker"
+  languageName: unknown
+  linkType: soft
+
 "nn@workspace:.":
   version: 0.0.0-use.local
   resolution: "nn@workspace:."

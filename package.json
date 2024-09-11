@@ -9,7 +9,7 @@
   "license": "MIT",
   "scripts": {
     "test": "yarn workspace nn-language test",
-    "build": "yarn workspace nn-language build && yarn workspace nn-language-server build"
+    "build": "yarn workspaces foreach --all --parallel run build"
   },
   "dependencies": {
     "ts-features": "^1.3.5"
@@ -25,7 +25,6 @@
   },
   "packageManager": "yarn@4.4.1",
   "workspaces": [
-    "packages/nn-language",
-    "packages/nn-language-server"
+    "packages/*"
   ]
 }
