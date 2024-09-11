@@ -63,9 +63,7 @@ connection.onRequest('textDocument/semanticTokens', (handler: DocumentSymbolPara
   const ast = parseResult.unwrap();
 
   const declarations = ast;
-  const callExpressions = travel(ast, (node) => {
-    if (isCallExpression(node)) return node;
-  });
+  const callExpressions = travel(ast, isCallExpression);
 
   for (const decl of declarations) {
     const { position } = decl.name;

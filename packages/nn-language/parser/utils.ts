@@ -15,12 +15,18 @@ export function toPosition(wrapper: Wrapper | Wrapper[]): Position {
   }
 }
 
-export function travel<T>(node: Node | Node[], callback: (node: Node) => T | undefined): T[] {
+type IsCallback<T extends Node> = (node: Node) => node is T
+type TravelCallback<T> =
+  T extends Node ? IsCallback<T> : (node: Node) => T | undefined
+
+export function travel<T>(node: Node | Node[], callback: TravelCallback<T>): T[] {
   const result: T[] = []
 
   const _travel = (node: Node) => {
     const res = callback(node)
-    if (res !== undefined) {
+    if (typeof res === "boolean") {
+      res && result.push(node as T)
+    } else if (res !== undefined) {
       result.push(res)
     }
 
