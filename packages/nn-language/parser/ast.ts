@@ -1,10 +1,10 @@
 import { Position } from "./types"
 
 export interface Identifier {
-  type: "Identifier"
   value: string
-
+  
   position: Position
+  type: "Identifier"
 }
 
 export interface Declaration {
@@ -14,12 +14,14 @@ export interface Declaration {
   firstPipe: boolean
   exprs: Expression[]
 
+  position: Position
   type: "Declaration"
 }
 
 export interface IdentifierExpression {
   ident: Identifier
 
+  position: Position
   type: "IdentifierExpression"
 }
 
@@ -28,18 +30,21 @@ export interface CallExpression {
   sizes: (Identifier | number)[]
   args: Expression[]
 
+  position: Position
   type: "CallExpression"
 }
 
 export interface TupleExpression {
   elements: Expression[]
 
+  position: Position
   type: "TupleExpression"
 }
 
 export interface StringLiteralExpression {
   value: Identifier
 
+  position: Position
   type: "StringLiteralExpression"
 }
 
@@ -48,6 +53,7 @@ export type Expression = IdentifierExpression | CallExpression | TupleExpression
 export interface ArgumentList {
   args: { ident: Identifier, valueType: TypeNode }[]
 
+  position: Position
   type: "ArgumentList"
 }
 
@@ -55,12 +61,14 @@ export interface TypeNode {
   isTensor: boolean // true
   sizes: (Identifier | number)[]
 
+  position: Position
   type: "TypeNode"
 }
 
 export interface SizeDeclList {
   decls: Identifier[]
 
+  position: Position
   type: "SizeDeclList"
 }
 

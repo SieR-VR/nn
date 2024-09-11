@@ -1,5 +1,7 @@
 import { Declaration, Identifier, isCallExpression, isIdentifierExpression, travel } from "nn-language";
-import { DeclarationScope, FileScope, Size, Value } from "./types";
+import { Result, Ok, Err } from "ts-features";
+
+import { DeclarationScope, FileScope, Size, Value, ResolveError } from "./types";
 	
 function findSize(scope: DeclarationScope, ident: string): Size {
   return scope.sizes.find(size => size.ident === ident);
@@ -27,11 +29,13 @@ function toValue(scope: DeclarationScope, ident: Identifier): Value {
   };
 }
  
-export function resolveNames(sourceCode: Declaration[], path: string): FileScope {
+export function resolveNames(sourceCode: Declaration[], path: string): Result<FileScope, ResolveError[]> {
   const fileScope: FileScope = {
     path,
     declarations: []
   };
+
+  const errors: ResolveError[] = [];
 
   for (const decl of sourceCode) {
     const declScope: DeclarationScope = {
@@ -63,8 +67,10 @@ export function resolveNames(sourceCode: Declaration[], path: string): FileScope
         if (value) {
           value.nodes.add(identExpr.ident);
         } else {
-          const newValue = toValue(declScope, identExpr.ident);
-          declScope.values.push(newValue);
+          errors.push({
+            message: `Using undeclared name '${identExpr.ident.value}'.`,
+            node: identExpr
+          });
         }
       });
 
@@ -78,13 +84,21 @@ export function resolveNames(sourceCode: Declaration[], path: string): FileScope
         if (size) {
           size.nodes.add(ident);
         } else {
-          const newSize = toSize(declScope, ident);
-          declScope.sizes.push(newSize);
+          errors.push({
+            message: `Using undeclared size name '${ident.value}'.`,
+            node: ident
+          });
         }
       });
 
     fileScope.declarations.push(declScope);
   }
 
-  return fileScope;
+  if (errors.length > 0) {
+    return Err(errors);
+  }
+
+  return Ok(fileScope);
 }
+
+export * from './types'

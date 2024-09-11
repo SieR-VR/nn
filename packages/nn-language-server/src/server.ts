@@ -21,6 +21,11 @@ import {
   isDeclaration,
   isCallExpression,
 } from 'nn-language'
+
+import {
+  resolveNames
+} from 'nn-type-checker'
+
 import { getSymbolKind } from './utils';
 
 const connection = createConnection(ProposedFeatures.all);
@@ -81,6 +86,53 @@ connection.onRequest('textDocument/semanticTokens', (handler: DocumentSymbolPara
 
   return builder.build();
 })
+
+connection.onCompletion((handler) => {
+  const completions = [];
+  return completions;
+})
+
+documents.onDidChangeContent((change) => {
+  validateTextDocument(change.document);
+});
+
+async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+  const parseResult = parse(textDocument.getText());
+  const diagnostics = [];
+
+  if (parseResult.is_err()) {
+    return;
+  }
+
+  const ast = parseResult.unwrap();
+  const declarations = travel(ast, isDeclaration);
+
+  const errors = resolveNames(declarations, textDocument.uri);
+  if (errors.is_err()) {
+    const resolveErrors = errors.unwrap_err();
+    
+    resolveErrors.forEach((error) => {
+      const startPos = textDocument.positionAt(error.node.position.pos);
+      const endPos = textDocument.positionAt(error.node.position.end);
+
+      diagnostics.push({
+        severity: 1,
+        range: {
+          start: startPos,
+          end: endPos,
+        },
+        message: error.message,
+      });
+    })
+  }
+
+  console.log(diagnostics);
+
+  connection.sendDiagnostics({
+    uri: textDocument.uri,
+    diagnostics,
+  });
+}
 
 documents.listen(connection);
 connection.listen();

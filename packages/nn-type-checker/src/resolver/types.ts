@@ -1,4 +1,4 @@
-import type { Declaration, Node } from "nn-language";
+import type { Node } from "nn-language";
 
 export interface FileScope {
 	path: string;
@@ -25,4 +25,9 @@ export interface Value {
 	ident: string;
 
 	nodes: Set<Node>;
+}
+
+export interface ResolveError {
+  message: string;
+  node: Node;
 }
