@@ -10,6 +10,9 @@
   },
   "scripts": {
     "build:ohm": "yarn ohm generateBundles --withTypes ./parser/nn.ohm",
-    "build": "yarn build:ohm && tsc"
-  }
+    "build": "yarn build:ohm && tsc",
+    "test": "jest"
+  },
+  "main": "out/parser/index.js",
+  "typings": "out/parser/index.d.ts"
 }
