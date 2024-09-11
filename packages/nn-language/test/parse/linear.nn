@@ -1,4 +1,4 @@
-Linear(x: Tensor) = 
-  x, Trainable('weight')
-  |> MatMul(), Trainable('bias')
+Linear[input, output](x: Tensor[input]) = 
+  x, Trainable[input, output]('weight')
+  |> MatMul(), Trainable[input]('bias')
   |> Bias()
