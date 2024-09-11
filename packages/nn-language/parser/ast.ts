@@ -1,112 +1,116 @@
-export interface Declaration {
-    name: string
-    sizeDeclList: SizeDeclList
-    argumentList: ArgumentList
-    firstPipe: boolean
-    exprs: Expression[]
+import { Position } from "./types"
 
-    type: "Declaration"
+export interface Identifier {
+  type: "Identifier"
+  value: string
+
+  position: Position
+}
+
+export interface Declaration {
+  name: Identifier
+  sizeDeclList: SizeDeclList
+  argumentList: ArgumentList
+  firstPipe: boolean
+  exprs: Expression[]
+
+  type: "Declaration"
 }
 
 export interface IdentifierExpression {
-    ident: string
+  ident: Identifier
 
-    type: "IdentifierExpression"
+  type: "IdentifierExpression"
 }
 
 export interface CallExpression {
-    callee: string
-    sizes: (string | number)[]
-    args: Expression[]
+  callee: Identifier
+  sizes: (Identifier | number)[]
+  args: Expression[]
 
-    type: "CallExpression"
+  type: "CallExpression"
 }
 
 export interface TupleExpression {
-    elements: Expression[]
+  elements: Expression[]
 
-    type: "TupleExpression"
+  type: "TupleExpression"
 }
 
 export interface StringLiteralExpression {
-    value: string
+  value: Identifier
 
-    type: "StringLiteralExpression"
+  type: "StringLiteralExpression"
 }
 
 export type Expression = IdentifierExpression | CallExpression | TupleExpression | StringLiteralExpression
 
 export interface ArgumentList {
-    args: { ident: string, valueType: TypeNode }[]
+  args: { ident: Identifier, valueType: TypeNode }[]
 
-    type: "ArgumentList"
+  type: "ArgumentList"
 }
 
 export interface TypeNode {
-    isTensor: boolean // true
-    sizes: (string | number)[]
+  isTensor: boolean // true
+  sizes: (Identifier | number)[]
 
-    type: "TypeNode"
+  type: "TypeNode"
 }
 
 export interface SizeDeclList {
-    decls: string[]
+  decls: Identifier[]
 
-    type: "SizeDeclList"
+  type: "SizeDeclList"
 }
 
 export type Node =
-    | Declaration
-    | Expression
-    | ArgumentList
-    | TypeNode
-    | SizeDeclList
-
-export function travel<T>(node: Node, callback: (node: Node) => T | undefined): T[] {
-    const result: T[] = []
-
-    const _travel = (node: Node) => {
-        const res = callback(node)
-        if (res !== undefined) {
-            result.push(res)
-        }
-
-        if (node.type === "Declaration") {
-            node.exprs.forEach(_travel)
-        }
-
-        if (node.type === "CallExpression") {
-            node.args.forEach(_travel)
-        }
-
-        if (node.type === "TupleExpression") {
-            node.elements.forEach(_travel)
-        }
-    }
-
-    _travel(node)
-    return result
-}
+  | Declaration
+  | Expression
+  | ArgumentList
+  | TypeNode
+  | SizeDeclList
+  | Identifier
 
 export function isDeclaration(node: Node): node is Declaration {
-    return node.type === "Declaration"
+  return node.type === "Declaration"
 }
 
 export function isExpression(node: Node): node is Expression {
-    return node.type === "IdentifierExpression"
-        || node.type === "CallExpression"
-        || node.type === "TupleExpression"
-        || node.type === "StringLiteralExpression"
+  return node.type === "IdentifierExpression"
+    || node.type === "CallExpression"
+    || node.type === "TupleExpression"
+    || node.type === "StringLiteralExpression"
+}
+
+export function isIdentifierExpression(node: Node): node is IdentifierExpression {
+  return node.type === "IdentifierExpression"
+}
+
+export function isCallExpression(node: Node): node is CallExpression {
+  return node.type === "CallExpression"
+}
+
+export function isTupleExpression(node: Node): node is TupleExpression {
+  return node.type === "TupleExpression"
+}
+
+export function isStringLiteralExpression(node: Node): node is StringLiteralExpression {
+  return node.type === "StringLiteralExpression"
+}
+
+export function isIdentifier(node: Node): node is Identifier {
+  return node.type === "Identifier"
 }
 
 export function isArgumentList(node: Node): node is ArgumentList {
-    return node.type === "ArgumentList"
+  return node.type === "ArgumentList"
 }
 
 export function isTypeNode(node: Node): node is TypeNode {
-    return node.type === "TypeNode"
+  return node.type === "TypeNode"
 }
 
 export function isSizeDeclList(node: Node): node is SizeDeclList {
-    return node.type === "SizeDeclList"
+  return node.type === "SizeDeclList"
 }

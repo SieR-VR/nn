@@ -1,50 +1,79 @@
-import * as ohm from "ohm-js";
-import { toAST } from "ohm-js/extras"
-
-import { readFileSync } from "fs";
-import { Declaration } from "./ast";
-
+import { toAST, } from "ohm-js/extras"
 import { Result, Ok, Err } from "ts-features";
 
-export const grammar = ohm.grammar(
-  readFileSync("./src/ohm/nn.ohm", "utf8")
-);
+import { grammar } from "./grammar";
+import { Declaration } from "./ast";
+import { Mapping } from "./types";
+import { toPosition } from "./utils";
 
-const mapping = {
+const mapping: Mapping = {
   Declaration: {
-    name: 0,
-    sizeDeclList: (children) => ({ type: "SizeDeclList", decls: children[1].toAST(mapping) }),
-    argumentList: (children) => ({ type: "ArgumentList", args: children[2].toAST(mapping) }),
-    firstPipe: 4,
+    name: (children) => children[0].toAST(mapping),
+    sizeDeclList: (children) => ({ type: "SizeDeclList", decls: children[1].toAST(mapping), position: toPosition(children[1]) }),
+    argumentList: (children) => ({ type: "ArgumentList", args: children[2].toAST(mapping), position: toPosition(children[2]) }),
+    firstPipe: (children) => children[4].toAST(mapping) !== null,
     exprs: (children) => [children[5].toAST(mapping), ...children[7].toAST(mapping)],
   },
 
   Expression: 0,
 
-  TupleExpression_tuple: { 
-    type: "TupleExpression", 
+  Expression_tuple: {
+    type: "TupleExpression",
     elements: (children) => [children[0].toAST(mapping), ...children[2].toAST(mapping)],
+    position: (children) => toPosition(children),
+  },
+  Expression_call: {
+    type: "CallExpression",
+    callee: 0,
+    sizes: 1,
+    args: 3,
+    position: (children) => toPosition(children),
+  },
+  Expression_ident: {
+    type: "IdentifierExpression",
+    ident: 0,
+    position: (children) => toPosition(children),
+  },
+  Expression_string: {
+    type: "StringLiteralExpression",
+    value: 0,
+    position: (children) => toPosition(children),
   },
 
-  CallExpression_call: { type: "CallExpression", callee: 0, sizes: 1, args: 3 },
-  IdentifierExpression_ident: { type: "IdentifierExpression", ident: 0 },
-  StringLiteralExpression: { value: 0 },
+  ArgumentDeclaration: {
+    ident: 0,
+    valueType: 2,
+    position: (children) => toPosition(children),
+  },
 
-  ArgumentDeclaration: { ident: 0, valueType: 2 },
+  Type: {
+    type: "TypeNode",
+    isTensor: true,
+    sizes: 1,
+    position: (children) => toPosition(children),
+  },
 
-  Type: { type: "TypeNode", isTensor: true, sizes: 1 },
+  Ident: {
+    type: "Identifier",
+    value: 0,
+    position: (children) => toPosition(children),
+  },
 
   string: 0,
   singleQuoteString: 1,
   doubleQuoteString: 1,
 }
 
-export function parse(input: string): Result<Declaration, string> {
+export function parse(input: string): Result<Declaration[], string> {
   const match = grammar.match(input);
   if (match.failed()) {
     return Err(match.message);
   }
 
-  const ast = toAST(match, mapping) as Declaration;
+  const ast = toAST(match, mapping) as Declaration[];
   return Ok(ast);
 }
+
+export { scan, Token } from "./scanner";
+export { travel } from "./utils";
+export * from "./ast";

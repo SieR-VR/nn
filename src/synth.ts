@@ -26,13 +26,11 @@ const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]
       return wildcard
     }
 
-    if ("type" in wildcard) {
-      return {
-        "Type": convertType,
-        "SizeDeclList": convertSize,
-        "ArgumentList": convertArguments,
-      }[wildcard.type](wildcard)
-    }
+    return {
+      "Type": convertType,
+      "SizeDeclList": convertSize,
+      "ArgumentList": convertArguments,
+    }[wildcard.type](wildcard)
   }
 
   return String.raw(
