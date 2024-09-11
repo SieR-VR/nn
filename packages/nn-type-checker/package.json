@@ -1,5 +1,10 @@
 {
   "name": "nn-type-checker",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "main": "out/src/index.js",
+  "typings": "out/src/index.d.ts"
 }

@@ -2974,6 +2974,7 @@ __metadata:
   dependencies:
     "@types/vscode": "npm:^1.93.0"
     nn-language: "workspace:^"
+    nn-type-checker: "workspace:^"
     vscode-languageclient: "npm:^9.0.1"
     vscode-languageserver: "npm:^9.0.1"
     vscode-languageserver-textdocument: "npm:^1.0.12"
@@ -2989,7 +2990,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"nn-type-checker@workspace:packages/nn-type-checker":
+"nn-type-checker@workspace:^, nn-type-checker@workspace:packages/nn-type-checker":
   version: 0.0.0-use.local
   resolution: "nn-type-checker@workspace:packages/nn-type-checker"
   languageName: unknown
