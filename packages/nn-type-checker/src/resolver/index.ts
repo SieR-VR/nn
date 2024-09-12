@@ -3,15 +3,15 @@ import { Result, Ok, Err } from "ts-features";
 
 import { DeclarationScope, FileScope, Size, Value, ResolveError } from "./types";
 	
-function findSize(scope: DeclarationScope, ident: string): Size {
+export function findSize(scope: DeclarationScope, ident: string): Size {
   return scope.sizes.find(size => size.ident === ident);
 }
 
-function findValue(scope: DeclarationScope, ident: string): Value {
+export function findValue(scope: DeclarationScope, ident: string): Value {
   return scope.values.find(value => value.ident === ident);
 }
 
-function toSize(scope: DeclarationScope, ident: Identifier): Size {
+export function toSize(scope: DeclarationScope, ident: Identifier): Size {
   return {
     scope,
     ident: ident.value,
@@ -20,7 +20,7 @@ function toSize(scope: DeclarationScope, ident: Identifier): Size {
   };
 }
 
-function toValue(scope: DeclarationScope, ident: Identifier): Value {
+export function toValue(scope: DeclarationScope, ident: Identifier): Value {
   return {
     scope,
     ident: ident.value,
@@ -56,6 +56,23 @@ export function resolveNames(sourceCode: Declaration[], path: string): Result<Fi
         const valueScope = toValue(declScope, arg.ident);
         declScope.values.push(valueScope);
       });
+
+    decl.argumentList.args
+      .forEach(arg => {
+        arg.valueType.sizes.forEach(size => {
+          if (typeof size === "number") {
+            return;
+          }
+
+          const sizeScope = findSize(declScope, size.value);
+
+          if (sizeScope) {
+            sizeScope.nodes.add(size);
+          } else {
+            declScope.sizes.push(toSize(declScope, size));
+          }
+        })
+      })
 
     const callExpressions = travel(decl.exprs, isCallExpression);
     const identExprs = travel(decl.exprs, isIdentifierExpression);
