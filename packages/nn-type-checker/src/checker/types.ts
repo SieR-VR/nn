@@ -1,4 +1,4 @@
-import { Expression, Node } from "nn-language";
+import { Node } from "nn-language";
 import { Size } from "../resolver";
 
 export interface Type {
@@ -15,4 +15,9 @@ export interface Edge {
   kind: 'Same' | 'Assign';
   from: Vertex;
   to: Vertex;
+}
+
+export interface TypeError {
+  message: string;
+  node: Node;
 }
