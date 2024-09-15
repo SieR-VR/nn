@@ -2,6 +2,7 @@ import {
   createConnection,
   DidChangeConfigurationNotification,
   DocumentSymbolParams,
+  Hover,
   InitializeResult,
   ProposedFeatures,
   SemanticTokens,
@@ -23,10 +24,12 @@ import {
 } from 'nn-language'
 
 import {
-  resolveNames
+  check,
 } from 'nn-type-checker'
 
-import { getSymbolKind } from './utils';
+import {
+  MarkdownString
+} from './utils'
 
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -37,9 +40,10 @@ connection.onInitialize((params) => {
   const result: InitializeResult = {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
+      hoverProvider: true,
       completionProvider: {
         resolveProvider: true,
-      }
+      },
     },
   }
 
@@ -87,6 +91,43 @@ connection.onRequest('textDocument/semanticTokens', (handler: DocumentSymbolPara
   return builder.build();
 })
 
+connection.onHover((handler) => {
+  const document = documents.get(handler.textDocument.uri);
+  if (!document) {
+    return null;
+  }
+
+  const parseResult = parse(document.getText());
+  if (parseResult.is_err()) {
+    return null;
+  }
+
+  const ast = parseResult.unwrap();
+  const declarations = travel(ast, isDeclaration);
+
+  const checkContext = check(declarations, handler.textDocument.uri);
+  const hoverPosition = document.offsetAt(handler.position);
+
+  const vertex = checkContext.vertices.find(vertex =>
+    vertex.expression.position.pos <= hoverPosition &&
+    hoverPosition <= vertex.expression.position.end
+  );
+
+  if (!vertex) {
+    return null;
+  }
+
+  const markdown = new MarkdownString();
+  markdown.appendCodeblock(
+    `Tensor[${vertex.type.shape.map(size => typeof size === 'number' ? size : size.ident).join(', ')}]`,
+    'nn'
+  );
+
+  return { 
+    contents: markdown.toMarkupContent()
+  }
+})
+
 connection.onCompletion((handler) => {
   const completions = [];
   return completions;
@@ -107,24 +148,23 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   const ast = parseResult.unwrap();
   const declarations = travel(ast, isDeclaration);
 
-  const errors = resolveNames(declarations, textDocument.uri);
-  if (errors.is_err()) {
-    const resolveErrors = errors.unwrap_err();
-    
-    resolveErrors.forEach((error) => {
-      const startPos = textDocument.positionAt(error.node.position.pos);
-      const endPos = textDocument.positionAt(error.node.position.end);
+  const checkContext = check(declarations, textDocument.uri);
 
-      diagnostics.push({
-        severity: 1,
-        range: {
-          start: startPos,
-          end: endPos,
-        },
-        message: error.message,
-      });
-    })
-  }
+  checkContext.diagnostics.forEach(diagnostic => {
+    const { position } = diagnostic.node;
+    const startPos = textDocument.positionAt(position.pos);
+    const endPos = textDocument.positionAt(position.end);
+
+    diagnostics.push({
+      range: {
+        start: startPos,
+        end: endPos,
+      },
+      severity: 1,
+      message: diagnostic.message,
+      source: 'nn-language-server',
+    });
+  });
 
   console.log(diagnostics);
 
