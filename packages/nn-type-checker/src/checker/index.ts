@@ -7,14 +7,16 @@ import { Vertex, Type, TypeError } from "./types";
 function toType(node: TypeNode | CallExpression, scope: DeclarationScope): Type {
   return {
     type: 'Tensor',
-    shape: node.sizes.map(shape => {
-      if (typeof shape === 'number') {
-        return shape;
-      }
+    shape: node.sizes 
+      ? node.sizes.map(shape => {
+        if (typeof shape === 'number') {
+          return shape;
+        }
 
-      const size = findSize(scope, shape);
-      return size;
-    })
+        const size = findSize(scope, shape)!;
+        return size;
+      })
+      : []
   }
 }
 
@@ -29,47 +31,45 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
       return acc;
     }, new Map<Node, Vertex>());
 
-  const expressions = [
-    ...travel(declaration, isCallExpression),
-    ...travel(declaration, isIdentifierExpression),
-  ];
 
-  expressions
-    .flatMap((expression): Vertex | Vertex[] => {
-      if (isCallExpression(expression)) {
-        if (expression.callee.value === 'Trainable') {
-          return {
-            expression,
-            type: toType(expression, scope)
-          }
-        }
+  travel(declaration, isIdentifierExpression)
+    .map((expression): Vertex => {
+      const value = findValue(scope, expression.ident)!;
+      const vertex = Array.from(value.nodes.values()).find(node => vertexList.has(node));
 
+      if (vertex) {
         return {
           expression,
-          type: null
+          type: vertexList.get(vertex)!.type
         }
       }
 
-      if (isIdentifierExpression(expression)) {
-        const value = findValue(scope, expression.ident);
-        const vertex = Array.from(value.nodes.values()).find(node => vertexList.has(node));
-
-        if (vertex) {
-          return {
-            expression,
-            type: vertexList.get(vertex).type
-          }
-        }
-
-        return {
-          expression,
-          type: null
-        }
+      return {
+        expression,
+        type: null
       }
     })
     .forEach(vertex => {
       vertexList.set(vertex.expression, vertex);
+    });
+
+  travel(declaration, isCallExpression)
+    .map((expression): Vertex => {
+      if (expression.callee.value === 'Trainable') {
+        return {
+          expression,
+          type: toType(expression, scope)
+        }
+      }
+
+      return {
+        expression,
+        type: null
+      }
     })
+    .forEach(vertex => {
+      vertexList.set(vertex.expression, vertex);
+    });
 
   let buffer: (Expression | Identifier)[] = declaration.firstPipe
     ? declaration.argumentList.args.map(arg => arg.ident)
@@ -121,9 +121,9 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
             }
           }
 
-          const [left, right] = args.map(arg => vertexList.get(arg).type)
+          const [left, right] = args.map(arg => vertexList.get(arg)!.type!)
 
-          if (right.shape.length !== 2) {
+          if (right.shape!.length !== 2) {
             diagnostics.push({
               message: 'MatMul requires a 2D tensor as the second argument',
               node: call
@@ -139,7 +139,7 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
 
           return {
             type: 'Tensor',
-            shape: [...left.shape.slice(-1), right.shape.at(1)]
+            shape: [...left.shape.slice(-1)!, right.shape.at(1)!]
           }
         },
         'Bias': () => {
@@ -167,7 +167,7 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
             }
           }
 
-          const [left, right] = args.map(arg => vertexList.get(arg).type)
+          const [left, right] = args.map(arg => vertexList.get(arg)!.type!)
 
           if (right.shape.length !== 1) {
             diagnostics.push({
@@ -191,7 +191,7 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
       })
 
       if (type) {
-        const vertex = vertexList.get(call);
+        const vertex = vertexList.get(call)!;
         vertex.type = type;
       }
     }

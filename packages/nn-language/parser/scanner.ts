@@ -23,7 +23,7 @@ const mapping: Mapping = {
 export function scan(input: string): Result<Token[], string> {
   const match = grammar.match(input, "Tokens");
   if (match.failed()) {
-    return Err(match.message);
+    return Err(match.message!);
   }
 
   const ast = toAST(match, mapping) as Token[];

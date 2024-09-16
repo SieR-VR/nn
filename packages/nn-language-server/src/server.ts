@@ -1,5 +1,7 @@
 import {
+  CompletionItem,
   createConnection,
+  Diagnostic,
   DidChangeConfigurationNotification,
   DocumentSymbolParams,
   Hover,
@@ -115,6 +117,11 @@ connection.onHover((handler) => {
     hoverPosition, 
     (node) => checkContext.vertices.has(node)
   );
+
+  if (!node) {
+    return null;
+  }
+
   const vertex = checkContext.vertices.get(node);
 
   if (!vertex) {
@@ -143,7 +150,7 @@ connection.onHover((handler) => {
 })
 
 connection.onCompletion((handler) => {
-  const completions = [];
+  const completions: CompletionItem[] = [];
   return completions;
 })
 
@@ -153,7 +160,7 @@ documents.onDidChangeContent((change) => {
 
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   const parseResult = parse(textDocument.getText());
-  const diagnostics = [];
+  const diagnostics: Diagnostic[] = [];
 
   if (parseResult.is_err()) {
     const [diagnostic] = parseResult.unwrap_err();

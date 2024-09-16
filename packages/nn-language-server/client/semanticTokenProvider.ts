@@ -10,7 +10,7 @@ Object.assign(tokenTypes, {
   [SymbolKind.Function]: 'function',
 })
 
-const tokenModifiers = [];
+const tokenModifiers: string[] = [];
 
 export const legend = new vscode.SemanticTokensLegend(tokenTypes, tokenModifiers);
 

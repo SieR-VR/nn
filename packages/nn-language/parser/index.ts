@@ -79,7 +79,7 @@ export function parse(input: string): Result<Declaration[], Diagnostic[]> {
   
   if (match.failed()) {
     return Err([{ 
-      message: match.shortMessage, 
+      message: match.shortMessage!, 
       position: {
         pos: match.getInterval().startIdx,
         end: match.getInterval().endIdx,

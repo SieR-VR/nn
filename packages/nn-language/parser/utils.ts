@@ -54,7 +54,9 @@ export function travel<T>(node: Node | Node[], callback: TravelCallback<T> | Boo
 }
 
 export function nodeOnPosition<T extends Node = Node>(node: Node | Node[], position: number, filter?: TravelCallback<T> | BooleanCallback): T | undefined {
-  const filtered = travel(node, filter)
+  const filtered = filter
+    ? travel(node, filter)
+    : node as T[]
 
   return filtered.find(node => {
     const { pos, end } = node.position

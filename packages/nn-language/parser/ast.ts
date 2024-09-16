@@ -9,7 +9,7 @@ export interface Identifier {
 
 export interface Declaration {
   name: Identifier
-  sizeDeclList: SizeDeclList
+  sizeDeclList?: SizeDeclList
   argumentList: ArgumentList
   firstPipe: boolean
   exprs: Expression[]
@@ -25,20 +25,20 @@ export interface IdentifierExpression {
   type: "IdentifierExpression"
 }
 
-export interface CallExpression {
-  callee: Identifier
-  sizes: (Identifier | number)[]
-  args: Expression[]
-
-  position: Position
-  type: "CallExpression"
-}
-
 export interface TupleExpression {
   elements: Expression[]
 
   position: Position
   type: "TupleExpression"
+}
+
+export interface CallExpression {
+  callee: Identifier
+  sizes?: (Identifier | number)[]
+  args: Expression[]
+
+  position: Position
+  type: "CallExpression"
 }
 
 export interface StringLiteralExpression {
@@ -59,7 +59,7 @@ export interface ArgumentList {
 
 export interface TypeNode {
   isTensor: boolean // true
-  sizes: (Identifier | number)[]
+  sizes?: (Identifier | number)[]
 
   position: Position
   type: "TypeNode"

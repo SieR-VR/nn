@@ -45,7 +45,7 @@ export function resolveNames(sourceCode: Declaration[], path: string): Result<Fi
       values: {}
     }
 
-    decl.sizeDeclList.decls
+    decl.sizeDeclList && decl.sizeDeclList.decls
       .forEach(size => {
         declScope.sizes[size.value] = toSize(declScope, size);
       });
@@ -55,10 +55,11 @@ export function resolveNames(sourceCode: Declaration[], path: string): Result<Fi
         declScope.values[arg.ident.value] = toValue(declScope, arg.ident);
       });
 
-    decl.argumentList.args 
+    decl.argumentList.args
       .flatMap(arg => arg.valueType.sizes)
+      .filter(size => !!size)
       .forEach(size => {
-        if (typeof size === "number") {
+        if (!size || typeof size === "number") {
           return;
         }
 
@@ -91,7 +92,7 @@ export function resolveNames(sourceCode: Declaration[], path: string): Result<Fi
     callExpressions
       .flatMap(sizeDeclList => sizeDeclList.sizes)
       .filter(ident => !!ident)
-      .filter(ident => typeof ident !== "number")
+      .filter(ident => typeof ident !== "number" && typeof ident !== "undefined")
       .forEach(ident => {
         const size = findSize(declScope, ident);
 
