@@ -14,7 +14,7 @@ export interface CheckerContext {
   path: string;
 
   scope: FileScope;
-  vertices: Vertex[];
+  vertices: Map<Node, Vertex>;
 
   diagnostics: Diagnostic[];
 }
@@ -32,19 +32,19 @@ export function check(syntaxTree: Declaration[], path: string): CheckerContext {
   ctx.scope = scope;
 
   const { vertices, diagnostics } = syntaxTree
-    .flatMap((decl, index) => checker(decl, scope.declarations[index]))
+    .flatMap((decl) => checker(decl, scope.declarations[decl.name.value]))
     .reduce((prev, result) => {
       if (result.is_err()) {
         const [vertices, errors] = result.unwrap_err();
         return {
-          vertices: [...prev.vertices, ...vertices],
+          vertices: new Map([...prev.vertices, ...vertices]),
           diagnostics: [...prev.diagnostics, ...errors],
         }
       }
 
       const vertices = result.unwrap();
-      return { vertices: [...prev.vertices, ...vertices], diagnostics: prev.diagnostics };
-    }, { vertices: [] as Vertex[], diagnostics: [] as Diagnostic[] });
+      return { vertices: new Map([...prev.vertices, ...vertices]), diagnostics: prev.diagnostics };
+    }, { vertices: new Map<Node, Vertex>(), diagnostics: [] as Diagnostic[] });
 
   return { ...ctx, vertices, diagnostics } as CheckerContext;
 }

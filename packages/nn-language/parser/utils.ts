@@ -16,10 +16,11 @@ export function toPosition(wrapper: Wrapper | Wrapper[]): Position {
 }
 
 type IsCallback<T extends Node> = (node: Node) => node is T
+type BooleanCallback = (node: Node) => boolean
 type TravelCallback<T> =
   T extends Node ? IsCallback<T> : (node: Node) => T | undefined
 
-export function travel<T>(node: Node | Node[], callback: TravelCallback<T>): T[] {
+export function travel<T>(node: Node | Node[], callback: TravelCallback<T> | BooleanCallback): T[] {
   const result: T[] = []
 
   const _travel = (node: Node) => {
@@ -48,6 +49,15 @@ export function travel<T>(node: Node | Node[], callback: TravelCallback<T>): T[]
   } else {
     _travel(node)
   }
-  
+
   return result
+}
+
+export function nodeOnPosition<T extends Node = Node>(node: Node | Node[], position: number, filter?: TravelCallback<T> | BooleanCallback): T | undefined {
+  const filtered = travel(node, filter)
+
+  return filtered.find(node => {
+    const { pos, end } = node.position
+    return position >= pos && position <= end
+  })
 }

@@ -1,6 +1,6 @@
 import { match_string, Result, Ok, Err } from "ts-features";
 
-import { CallExpression, Declaration, Expression, Identifier, isCallExpression, isIdentifierExpression, isTupleExpression, travel, TypeNode } from "nn-language";
+import { CallExpression, Declaration, Expression, Identifier, isCallExpression, isIdentifierExpression, isTupleExpression, Node, travel, TypeNode } from "nn-language";
 import { DeclarationScope, findValue, findSize } from "../resolver";
 import { Vertex, Type, TypeError } from "./types";
 
@@ -12,71 +12,76 @@ function toType(node: TypeNode | CallExpression, scope: DeclarationScope): Type 
         return shape;
       }
 
-      const size = findSize(scope, shape.value);
+      const size = findSize(scope, shape);
       return size;
     })
   }
 }
 
-export function checker(declaration: Declaration, scope: DeclarationScope): Result<Vertex[], [Vertex[], TypeError[]]> {
+export function checker(declaration: Declaration, scope: DeclarationScope): Result<Map<Node, Vertex>, [Map<Node, Vertex>, TypeError[]]> {
   const diagnostics: TypeError[] = [];
 
-  const vertexList: Vertex[] = declaration
+  const vertexList: Map<Node, Vertex> = declaration
     .argumentList.args
     .map(arg => ({ expression: arg.ident, type: toType(arg.valueType, scope) }))
+    .reduce((acc, vertex) => {
+      acc.set(vertex.expression, vertex);
+      return acc;
+    }, new Map<Node, Vertex>());
 
   const expressions = [
     ...travel(declaration, isCallExpression),
     ...travel(declaration, isIdentifierExpression),
   ];
 
-  vertexList.push(...expressions.flatMap((expression): Vertex | Vertex[] => {
-    if (isCallExpression(expression)) {
-      if (expression.callee.value === 'Trainable') {
+  expressions
+    .flatMap((expression): Vertex | Vertex[] => {
+      if (isCallExpression(expression)) {
+        if (expression.callee.value === 'Trainable') {
+          return {
+            expression,
+            type: toType(expression, scope)
+          }
+        }
+
         return {
           expression,
-          type: toType(expression, scope)
+          type: null
         }
       }
 
-      return {
-        expression,
-        type: null
-      }
-    }
+      if (isIdentifierExpression(expression)) {
+        const value = findValue(scope, expression.ident);
+        const vertex = Array.from(value.nodes.values()).find(node => vertexList.has(node));
 
-    if (isIdentifierExpression(expression)) {
-      const value = findValue(scope, expression.ident.value);
-      const vertex = vertexList.find(vertex => value.nodes.has(vertex.expression));
+        if (vertex) {
+          return {
+            expression,
+            type: vertexList.get(vertex).type
+          }
+        }
 
-      if (vertex) {
         return {
           expression,
-          type: vertex.type
+          type: null
         }
       }
-
-      return {
-        expression,
-        type: null
-      }
-    }
-  }))
+    })
+    .forEach(vertex => {
+      vertexList.set(vertex.expression, vertex);
+    })
 
   let buffer: (Expression | Identifier)[] = declaration.firstPipe
     ? declaration.argumentList.args.map(arg => arg.ident)
     : []
 
   declaration.exprs.forEach((expr, index) => {
-    const firstExpression = (() => {
-      if (isTupleExpression(expr)) {
-        return expr.elements[0]
-      }
-
-      return expr
-    })();
+    const firstExpression = isTupleExpression(expr)
+      ? expr.elements[0]
+      : expr;
 
     const callNeeded = (index !== 0) || (index === 0 && declaration.firstPipe)
+
     if (!isCallExpression(firstExpression) && callNeeded) {
       diagnostics.push({
         message: 'First expression must be a function call if there is a pipe',
@@ -99,20 +104,24 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
               message: 'MatMul requires 2 arguments',
               node: call
             })
+
+            return;
           }
 
-          args.forEach((arg, index) => {
-            const vertex = vertexList.find(vertex => vertex.expression === arg);
+          for (const arg of args) {
+            const vertex = vertexList.get(arg);
 
             if (!vertex || vertex.type === null) {
               diagnostics.push({
                 message: `Argument ${index + 1} type is unknown`,
                 node: arg
               })
-            }
-          })
 
-          const [left, right] = args.map(arg => vertexList.find(vertex => vertex.expression === arg).type)
+              return;
+            }
+          }
+
+          const [left, right] = args.map(arg => vertexList.get(arg).type)
 
           if (right.shape.length !== 2) {
             diagnostics.push({
@@ -141,20 +150,25 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
               message: 'Bias requires 2 arguments',
               node: call
             })
+
+            return;
           }
 
-          args.forEach((arg, index) => {
-            const vertex = vertexList.find(vertex => vertex.expression === arg);
+          for (const arg of args) {
+            const vertex = vertexList.get(arg);
 
             if (!vertex || vertex.type === null) {
               diagnostics.push({
                 message: `Argument ${index + 1} type is unknown`,
                 node: arg
               })
-            }
-          })
 
-          const [left, right] = args.map(arg => vertexList.find(vertex => vertex.expression === arg).type)
+              return;
+            }
+          }
+
+          const [left, right] = args.map(arg => vertexList.get(arg).type)
+
           if (right.shape.length !== 1) {
             diagnostics.push({
               message: 'Bias requires a 1D tensor as the second argument',
@@ -177,7 +191,7 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
       })
 
       if (type) {
-        const vertex = vertexList.find(vertex => vertex.expression === call);
+        const vertex = vertexList.get(call);
         vertex.type = type;
       }
     }

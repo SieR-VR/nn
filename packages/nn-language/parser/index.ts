@@ -92,5 +92,5 @@ export function parse(input: string): Result<Declaration[], Diagnostic[]> {
 }
 
 export { scan, Token } from "./scanner";
-export { travel } from "./utils";
+export { travel, nodeOnPosition } from "./utils";
 export * from "./ast";

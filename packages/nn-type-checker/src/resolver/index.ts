@@ -3,12 +3,12 @@ import { Result, Ok, Err } from "ts-features";
 
 import { DeclarationScope, FileScope, Size, Value, ResolveError } from "./types";
 	
-export function findSize(scope: DeclarationScope, ident: string): Size {
-  return scope.sizes.find(size => size.ident === ident);
+export function findSize(scope: DeclarationScope, ident: Identifier): Size | undefined {
+  return scope.sizes[ident.value];
 }
 
-export function findValue(scope: DeclarationScope, ident: string): Value {
-  return scope.values.find(value => value.ident === ident);
+export function findValue(scope: DeclarationScope, ident: Identifier): Value | undefined {
+  return scope.values[ident.value];
 }
 
 export function toSize(scope: DeclarationScope, ident: Identifier): Size {
@@ -32,46 +32,43 @@ export function toValue(scope: DeclarationScope, ident: Identifier): Value {
 export function resolveNames(sourceCode: Declaration[], path: string): Result<FileScope, ResolveError[]> {
   const fileScope: FileScope = {
     path,
-    declarations: []
+    declarations: {}
   };
 
   const errors: ResolveError[] = [];
 
-  for (const decl of sourceCode) {
+  sourceCode.forEach(decl => {
     const declScope: DeclarationScope = {
       file: fileScope,
       declaration: decl.name.value,
-      sizes: [],
-      values: []
+      sizes: {},
+      values: {}
     }
 
     decl.sizeDeclList.decls
-      .forEach(ident => {
-        const sizeScope = toSize(declScope, ident);
-        declScope.sizes.push(sizeScope);
+      .forEach(size => {
+        declScope.sizes[size.value] = toSize(declScope, size);
       });
 
     decl.argumentList.args
       .forEach(arg => {
-        const valueScope = toValue(declScope, arg.ident);
-        declScope.values.push(valueScope);
+        declScope.values[arg.ident.value] = toValue(declScope, arg.ident);
       });
 
-    decl.argumentList.args
-      .forEach(arg => {
-        arg.valueType.sizes.forEach(size => {
-          if (typeof size === "number") {
-            return;
-          }
+    decl.argumentList.args 
+      .flatMap(arg => arg.valueType.sizes)
+      .forEach(size => {
+        if (typeof size === "number") {
+          return;
+        }
 
-          const sizeScope = findSize(declScope, size.value);
+        const sizeScope = findSize(declScope, size);
 
-          if (sizeScope) {
-            sizeScope.nodes.add(size);
-          } else {
-            declScope.sizes.push(toSize(declScope, size));
-          }
-        })
+        if (sizeScope) {
+          sizeScope.nodes.add(size);
+        } else {
+          declScope.sizes[size.value] = toSize(declScope, size);
+        }
       })
 
     const callExpressions = travel(decl.exprs, isCallExpression);
@@ -79,7 +76,7 @@ export function resolveNames(sourceCode: Declaration[], path: string): Result<Fi
 
     identExprs
       .forEach(identExpr => {
-        const value = findValue(declScope, identExpr.ident.value);
+        const value = findValue(declScope, identExpr.ident);
 
         if (value) {
           value.nodes.add(identExpr.ident);
@@ -96,7 +93,7 @@ export function resolveNames(sourceCode: Declaration[], path: string): Result<Fi
       .filter(ident => !!ident)
       .filter(ident => typeof ident !== "number")
       .forEach(ident => {
-        const size = findSize(declScope, ident.value);
+        const size = findSize(declScope, ident);
 
         if (size) {
           size.nodes.add(ident);
@@ -108,8 +105,8 @@ export function resolveNames(sourceCode: Declaration[], path: string): Result<Fi
         }
       });
 
-    fileScope.declarations.push(declScope);
-  }
+    fileScope.declarations[decl.name.value] = declScope;
+  });
 
   if (errors.length > 0) {
     return Err(errors);

@@ -2,15 +2,15 @@ import type { Node } from "nn-language";
 
 export interface FileScope {
 	path: string;
-	declarations: DeclarationScope[];
+	declarations: Record<string, DeclarationScope>;
 }
 
 export interface DeclarationScope {
 	file: FileScope;
 	declaration: string;
 
-	sizes: Size[];
-	values: Value[];
+	sizes: Record<string, Size>;
+	values: Record<string, Value>;
 }
 
 export interface Size {

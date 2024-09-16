@@ -21,6 +21,8 @@ import {
   travel,
   isDeclaration,
   isCallExpression,
+  nodeOnPosition,
+  isExpression,
 } from 'nn-language'
 
 import {
@@ -108,22 +110,30 @@ connection.onHover((handler) => {
   const checkContext = check(declarations, handler.textDocument.uri);
   const hoverPosition = document.offsetAt(handler.position);
 
-  const vertex = checkContext.vertices.find(vertex =>
-    vertex.expression.position.pos <= hoverPosition &&
-    hoverPosition <= vertex.expression.position.end
+  const node = nodeOnPosition(
+    ast, 
+    hoverPosition, 
+    (node) => checkContext.vertices.has(node)
   );
+  const vertex = checkContext.vertices.get(node);
 
   if (!vertex) {
     return null;
   }
 
   const markdown = new MarkdownString();
-  markdown.appendCodeblock(
-    `Tensor[${vertex.type.shape.map(size => typeof size === 'number' ? size : size.ident).join(', ')}]`,
-    'nn'
-  );
 
-  return { 
+  if (vertex.type !== null) {
+    markdown.appendCodeblock(
+      `Tensor[${vertex.type.shape.map(size => typeof size === 'number' ? size : size.ident).join(', ')}]`,
+      'nn'
+    );
+  }
+  else {
+    markdown.appendText('Unknown');
+  }
+
+  return {
     contents: markdown.toMarkupContent(),
     range: {
       start: document.positionAt(vertex.expression.position.pos),
