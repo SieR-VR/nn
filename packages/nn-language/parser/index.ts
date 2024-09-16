@@ -3,20 +3,19 @@ import { Result, Ok, Err } from "ts-features";
 
 import { grammar } from "./grammar";
 import { Declaration } from "./ast";
-import { Mapping } from "./types";
+import { Diagnostic, Mapping } from "./types";
 import { toPosition } from "./utils";
 
 const mapping: Mapping = {
   Declaration: {
     name: (children) => children[0].toAST(mapping),
-    sizeDeclList: (children) => ({ type: "SizeDeclList", decls: children[1].toAST(mapping), position: toPosition(children[1]) }),
-    argumentList: (children) => ({ type: "ArgumentList", args: children[2].toAST(mapping), position: toPosition(children[2]) }),
+    sizeDeclList: 1,
+    argumentList: 2,
     firstPipe: (children) => children[4].toAST(mapping) !== null,
     exprs: (children) => [children[5].toAST(mapping), ...children[7].toAST(mapping)],
   },
 
   Expression: 0,
-
   Expression_tuple: {
     type: "TupleExpression",
     elements: (children) => [children[0].toAST(mapping), ...children[2].toAST(mapping)],
@@ -40,9 +39,20 @@ const mapping: Mapping = {
     position: (children) => toPosition(children),
   },
 
+  Arguments: {
+    type: "ArgumentList",
+    args: (children) => children[1].toAST(mapping),
+    position: (children) => toPosition(children),
+  },
   ArgumentDeclaration: {
     ident: 0,
     valueType: 2,
+    position: (children) => toPosition(children),
+  },
+
+  SizeDecls: {
+    type: "SizeDeclList",
+    decls: (children) => children[1].toAST(mapping),
     position: (children) => toPosition(children),
   },
 
@@ -64,10 +74,17 @@ const mapping: Mapping = {
   doubleQuoteString: 1,
 }
 
-export function parse(input: string): Result<Declaration[], string> {
+export function parse(input: string): Result<Declaration[], Diagnostic[]> {
   const match = grammar.match(input);
+  
   if (match.failed()) {
-    return Err(match.message);
+    return Err([{ 
+      message: match.shortMessage, 
+      position: {
+        pos: match.getInterval().startIdx,
+        end: match.getInterval().endIdx,
+      }
+    }]);
   }
 
   const ast = toAST(match, mapping) as Declaration[];

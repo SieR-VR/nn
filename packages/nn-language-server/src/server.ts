@@ -124,7 +124,11 @@ connection.onHover((handler) => {
   );
 
   return { 
-    contents: markdown.toMarkupContent()
+    contents: markdown.toMarkupContent(),
+    range: {
+      start: document.positionAt(vertex.expression.position.pos),
+      end: document.positionAt(vertex.expression.position.end),
+    }
   }
 })
 
@@ -142,6 +146,26 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   const diagnostics = [];
 
   if (parseResult.is_err()) {
+    const [diagnostic] = parseResult.unwrap_err();
+
+    const startPos = textDocument.positionAt(diagnostic.position.pos);
+    const endPos = textDocument.positionAt(diagnostic.position.end);
+
+    diagnostics.push({
+      range: {
+        start: startPos,
+        end: endPos,
+      },
+      severity: 1,
+      message: diagnostic.message,
+      source: 'nn-language-server',
+    });
+
+    connection.sendDiagnostics({
+      uri: textDocument.uri,
+      diagnostics,
+    });
+
     return;
   }
 

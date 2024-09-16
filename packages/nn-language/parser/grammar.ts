@@ -2,7 +2,7 @@ import * as ohm from 'ohm-js'
 
 export const grammar = ohm.grammar(`
 
-NN {
+nn {
   SourceCode = Declaration*
 
 	Declaration = Ident SizeDecls? Arguments "=" "|>"? Expression ("|>" Expression)*
@@ -15,8 +15,6 @@ NN {
   
   Arguments = "(" ListOf<ArgumentDeclaration, ","> ")"
   ArgumentDeclaration = Ident ":" Type
-  
-  Type = Ident SizeType?
 
   SizeType = "[" ListOf<Size, ","> "]"
   Size 
@@ -27,6 +25,8 @@ NN {
     | number
     | Ident
   SizeDecls = "[" ListOf<Ident, ","> "]"
+
+  Type = Ident SizeType?
 
   Ident = identifier
 
