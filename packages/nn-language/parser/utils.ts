@@ -23,7 +23,15 @@ type TravelCallback<T> =
 export function travel<T>(node: Node | Node[], callback: TravelCallback<T> | BooleanCallback): T[] {
   const result: T[] = []
 
-  const _travel = (node: Node) => {
+  const _travel = (node: Node | Node[] | Node[keyof Node]) => {
+    if (!node || typeof node === "string" || typeof node === "boolean" || typeof node === "number") return
+    if ("pos" in node) return
+
+    if (Array.isArray(node)) {
+      node.forEach(_travel)
+      return
+    }
+    
     const res = callback(node)
     if (typeof res === "boolean") {
       res && result.push(node as T)
@@ -31,25 +39,10 @@ export function travel<T>(node: Node | Node[], callback: TravelCallback<T> | Boo
       result.push(res)
     }
 
-    if (node.type === "Declaration") {
-      node.exprs.forEach(_travel)
-    }
-
-    if (node.type === "CallExpression") {
-      node.args.forEach(_travel)
-    }
-
-    if (node.type === "TupleExpression") {
-      node.elements.forEach(_travel)
-    }
+    Object.values(node).forEach(_travel)
   }
 
-  if (Array.isArray(node)) {
-    node.forEach(_travel)
-  } else {
-    _travel(node)
-  }
-
+  _travel(node)
   return result
 }
 
@@ -58,8 +51,16 @@ export function nodeOnPosition<T extends Node = Node>(node: Node | Node[], posit
     ? travel(node, filter)
     : node as T[]
 
-  return filtered.find(node => {
-    const { pos, end } = node.position
-    return position >= pos && position <= end
-  })
+  const sorted = filtered
+    .filter(node => {
+      const { pos, end } = node.position
+      return position >= pos && position <= end
+    })
+    .sort((a, b) => {
+      const lenA = a.position.end - a.position.pos
+      const lenB = b.position.end - b.position.pos
+      return lenA - lenB
+    })
+  
+  return sorted.at(0)
 }
