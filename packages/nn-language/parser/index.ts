@@ -13,6 +13,7 @@ const mapping: Mapping = {
     argumentList: 2,
     firstPipe: (children) => children[4].toAST(mapping) !== null,
     exprs: (children) => [children[5].toAST(mapping), ...children[7].toAST(mapping)],
+    position: (children) => toPosition(children),
   },
 
   Expression: 0,
