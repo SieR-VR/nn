@@ -1,5 +1,5 @@
 import { match_string } from "ts-features"
-import { ArgumentList, CallExpression, Declaration, Expression, IdentifierExpression, Node, SizeDeclList, StringLiteralExpression, travel, TupleExpression, TypeNode } from "../packages/nn-language/parser/ast"
+import { ArgumentList, CallExpression, Declaration, Expression, Identifier, IdentifierExpression, isCallExpression, Node, SizeDeclList, StringLiteralExpression, travel, TupleExpression, TypeNode } from "nn-language"
 
 const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]) => {
   const convertType = (type: TypeNode) => {
@@ -26,11 +26,12 @@ const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]
       return wildcard
     }
 
-    return {
-      "Type": convertType,
-      "SizeDeclList": convertSize,
-      "ArgumentList": convertArguments,
-    }[wildcard.type](wildcard)
+    return match_string<string, string>(wildcard.type, {
+      "Type": () => convertType(wildcard as TypeNode),
+      "SizeDeclList": () => convertSize(wildcard as SizeDeclList),
+      "ArgumentList": () => convertArguments(wildcard as ArgumentList),
+      "_?": () => ""
+    })
   }
 
   return String.raw(
@@ -40,18 +41,14 @@ const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]
 }
 
 const pyinits = (decl: Declaration, indent: number = 4) => {
-  const calls = travel(decl, (node) => {
-    if (node.type === 'CallExpression') {
-      return node
-    }
-  })
+  const calls = travel(decl, isCallExpression)
 
   const inits = calls
-    .filter((call) => call.callee === 'Trainable')
+    .filter((call) => call.callee.value === 'Trainable')
     .map((call) => {
       const [name] = call.args as [StringLiteralExpression]
 
-      return `self.${name.value} = Tensor.zeros(${call.sizes.join(", ")})`
+      return `self.${name.value} = Tensor.zeros(${call.sizes!.join(", ")})`
     })
 
   const indentStr = " ".repeat(indent)
@@ -62,19 +59,19 @@ const pyinits = (decl: Declaration, indent: number = 4) => {
 const pyforward = (decl: Declaration, indent: number = 4) => {
   const result = []
   let returns = decl.firstPipe
-    ? decl.argumentList.args.map((arg) => arg.ident)
+    ? decl.argumentList.args.map((arg) => arg.ident.value)
     : []
 
-  const toPythonExpression = (expr: Expression | string) => {
+  const toPythonExpression = (expr: Expression | Identifier | string): string => {
     if (typeof expr === 'string') {
       return expr
     }
 
-    return match_string<string, Expression['type']>(expr.type, {
+    return match_string<string, string>(expr.type, {
       CallExpression: () => {
         const { callee, args } = expr as CallExpression
 
-        if (callee === 'Trainable') {
+        if (callee.value === 'Trainable') {
           const { value } = (expr as CallExpression).args[0] as StringLiteralExpression
           return `self.${value}`
         }
@@ -84,7 +81,7 @@ const pyforward = (decl: Declaration, indent: number = 4) => {
         return `${callee}(${right.join(", ")})`
       },
       IdentifierExpression: () => {
-        return (expr as IdentifierExpression).ident
+        return (expr as IdentifierExpression).ident.value
       },
       StringLiteralExpression: () => {
         throw new Error("Unreachable StringLiteralExpression as code")
