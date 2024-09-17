@@ -106,14 +106,17 @@ connection.onHover((handler) => {
     return null;
   }
 
-  const ast = parseResult.unwrap();
-  const declarations = travel(ast, isDeclaration);
+  const declarations = parseResult.unwrap();
 
   const checkContext = check(declarations, handler.textDocument.uri);
-  const hoverPosition = document.offsetAt(handler.position);
+  if (!checkContext.vertices) {
+    return null;
+  }
 
+  const hoverPosition = document.offsetAt(handler.position);
+  
   const node = nodeOnPosition(
-    ast, 
+    declarations, 
     hoverPosition, 
     (node) => checkContext.vertices.has(node)
   );
