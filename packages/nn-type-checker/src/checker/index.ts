@@ -40,6 +40,23 @@ function toSizeType(node: SizeNode, scope: DeclarationScope): SizeType {
   })
 }
 
+function isSizeTypeSame(left: SizeType, right: SizeType): boolean {
+  if (left.computeKind !== right.computeKind) {
+    return false;
+  }
+
+  switch (left.computeKind) {
+    case 'add':
+    case 'mul':
+    case 'pow':
+      return isSizeTypeSame(left.left as SizeType, right.left as SizeType) && isSizeTypeSame(left.right as SizeType, right.right as SizeType);
+    case 'ident':
+      return left.left === right.left;
+    case 'number':
+      return left.left === right.left;
+  }
+}
+
 function toType(node: TypeNode | CallExpression, scope: DeclarationScope): Type {
   return {
     type: 'Tensor',
@@ -159,7 +176,7 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
             })
           }
 
-          if (left.shape.at(-1) !== right.shape.at(0)) {
+          if (!isSizeTypeSame(left.shape.at(-1)!, right.shape.at(0)!)) {
             diagnostics.push({
               message: 'MatMul requires the last dimension of the first argument to match the first dimension of the second argument',
               node: call
@@ -205,7 +222,7 @@ export function checker(declaration: Declaration, scope: DeclarationScope): Resu
             })
           }
 
-          if (left.shape.at(-1) !== right.shape.at(0)) {
+          if (!isSizeTypeSame(left.shape.at(-1)!, right.shape.at(0)!)) {
             diagnostics.push({
               message: 'Bias requires the last dimension of the first argument to match the first dimension of the second argument',
               node: call
