@@ -1,87 +1,96 @@
 import { Position } from "./types"
 
-export interface Identifier {
+export interface Node {
+  position: Position
+  type: string
+}
+
+export interface SizeDeclList extends Node {
+  decls: Identifier[]
+
+  type: "SizeDeclList"
+}
+
+export interface ArgumentList extends Node {
+  args: { ident: Identifier, valueType: TypeNode }[]
+
+  type: "ArgumentList"
+}
+
+export interface Identifier extends Node {
   value: string
   
-  position: Position
   type: "Identifier"
 }
 
-export interface Declaration {
+export interface Declaration extends Node {
   name: Identifier
   sizeDeclList?: SizeDeclList
   argumentList: ArgumentList
   firstPipe: boolean
   exprs: Expression[]
 
-  position: Position
   type: "Declaration"
 }
 
-export interface IdentifierExpression {
+export interface IdentifierExpression extends Node {
   ident: Identifier
 
-  position: Position
   type: "IdentifierExpression"
 }
 
-export interface TupleExpression {
+export interface TupleExpression extends Node {
   elements: Expression[]
 
-  position: Position
   type: "TupleExpression"
 }
 
-export interface CallExpression {
+export interface CallExpression extends Node {
   callee: Identifier
-  sizes?: (Identifier | number)[]
+  sizes?: SizeNode[]
   args: Expression[]
 
-  position: Position
   type: "CallExpression"
 }
 
-export interface StringLiteralExpression {
+export interface StringLiteralExpression extends Node {
   value: Identifier
 
-  position: Position
   type: "StringLiteralExpression"
 }
 
 export type Expression = IdentifierExpression | CallExpression | TupleExpression | StringLiteralExpression
 
-export interface ArgumentList {
-  args: { ident: Identifier, valueType: TypeNode }[]
 
-  position: Position
-  type: "ArgumentList"
+export interface SizeNode extends Node {
+  left?: SizeNode
+  right?: SizeNode
+
+  ident?: Identifier
+  number?: number
+  
+  sizeType: "pow" | "mul" | "add" | "ident" | "number"
+  type: "SizeNode"
 }
 
-export interface TypeNode {
+export interface TypeNode extends Node {
   isTensor: boolean // true
-  sizes?: (Identifier | number)[]
+  sizes?: SizeNode[]
 
-  position: Position
   type: "TypeNode"
 }
 
-export interface SizeDeclList {
-  decls: Identifier[]
-
-  position: Position
-  type: "SizeDeclList"
-}
-
-export type Node =
-  | Declaration
-  | Expression
-  | ArgumentList
-  | TypeNode
-  | SizeDeclList
-  | Identifier
 
 export function isDeclaration(node: Node): node is Declaration {
   return node.type === "Declaration"
+}
+
+export function isSizeDeclList(node: Node): node is SizeDeclList {
+  return node.type === "SizeDeclList"
+}
+
+export function isArgumentList(node: Node): node is ArgumentList {
+  return node.type === "ArgumentList"
 }
 
 export function isExpression(node: Node): node is Expression {
@@ -111,14 +120,10 @@ export function isIdentifier(node: Node): node is Identifier {
   return node.type === "Identifier"
 }
 
-export function isArgumentList(node: Node): node is ArgumentList {
-  return node.type === "ArgumentList"
-}
-
 export function isTypeNode(node: Node): node is TypeNode {
   return node.type === "TypeNode"
 }
 
-export function isSizeDeclList(node: Node): node is SizeDeclList {
-  return node.type === "SizeDeclList"
+export function isSizeNode(node: Node): node is SizeNode {
+  return node.type === "SizeNode"
 }

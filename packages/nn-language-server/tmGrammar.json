@@ -30,6 +30,10 @@
       "name": "string.quoted.single",
       "begin": "'",
       "end": "'"
+    },
+    {
+      "name": "comment.line",
+      "match": "#.*$"
     }
   ]
 }

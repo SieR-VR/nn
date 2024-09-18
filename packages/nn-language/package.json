@@ -9,10 +9,9 @@
     "@ohm-js/cli": "^2.0.0"
   },
   "scripts": {
-    "build:ohm": "yarn ohm generateBundles --withTypes ./parser/nn.ohm",
-    "build": "yarn build:ohm && tsc",
+    "build": "tsc",
     "test": "jest"
   },
-  "main": "out/parser/index.js",
-  "typings": "out/parser/index.d.ts"
+  "main": "out/src/index.js",
+  "typings": "out/src/index.d.ts"
 }

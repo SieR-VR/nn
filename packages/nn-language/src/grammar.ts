@@ -6,15 +6,15 @@ nn {
   SourceCode = Declaration*
 
 	Declaration = Ident SizeDecls? Arguments "=" "|>"? Expression ("|>" Expression)*
+  SizeDecls = "[" ListOf<Ident, ","> "]"
+  Arguments = "(" ListOf<ArgumentDeclaration, ","> ")"
+  ArgumentDeclaration = Ident ":" Type
     
   Expression 
     = Expression ( "," Expression ) + -- tuple
     | Ident SizeType? "(" ListOf<Expression, ","> ")" -- call
     | Ident -- ident
     | string -- string
-  
-  Arguments = "(" ListOf<ArgumentDeclaration, ","> ")"
-  ArgumentDeclaration = Ident ":" Type
 
   SizeType = "[" ListOf<Size, ","> "]"
   Size 
@@ -22,9 +22,8 @@ nn {
     | Size "*" Size -- mul
     | Size "+" Size -- add
     | "(" Size ")" -- paren
-    | number
-    | Ident
-  SizeDecls = "[" ListOf<Ident, ","> "]"
+    | Ident -- ident
+    | number -- number
 
   Type = Ident SizeType?
 
@@ -42,6 +41,9 @@ nn {
   identifierPart = identifierStart | digit
   
   number = "1".."9" digit*
+
+  comment = "#" (~"\\n" any)*
+  space += comment
 
   // Lexical rules for syntax highlighting
 
