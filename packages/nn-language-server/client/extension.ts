@@ -14,7 +14,7 @@ let client: LanguageClient;
 
 export async function activate(context: ExtensionContext) {
   const serverModule = context.asAbsolutePath(
-    path.join("out", "src", "server.js")
+    path.join("out", "src", "cli.js")
   );
 
   console.log(serverModule);

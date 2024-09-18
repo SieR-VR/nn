@@ -31,11 +31,13 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "commander": "^12.1.0",
     "nn-language": "workspace:^",
     "nn-type-checker": "workspace:^",
     "vscode-languageclient": "^9.0.1",
     "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.12"
+    "vscode-languageserver-textdocument": "^1.0.12",
+    "vscode-uri": "^3.0.8"
   },
   "devDependencies": {
     "@types/vscode": "^1.93.0"

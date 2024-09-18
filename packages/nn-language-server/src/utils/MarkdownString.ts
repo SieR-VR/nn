@@ -1,17 +1,7 @@
-import { Token } from 'nn-language'
-import { MarkupContent, SymbolKind } from 'vscode-languageserver';
-
-export function getSymbolKind(token: Token): SymbolKind {
-  return {
-    ['identifier']: SymbolKind.Variable,
-    ['valueToken']: SymbolKind.Constant,
-    ['specialChars']: SymbolKind.Operator,
-    ['string']: SymbolKind.String
-  }[token.type]
-}
+import { MarkupContent } from "vscode-languageserver/node";
 
 export class MarkdownString {
-  constructor (public value = '') {}
+  constructor(public value = '') { }
 
   appendText(text: string) {
     this.value += MarkdownString.escapeMarkdownSyntaxTokens(text)
@@ -33,7 +23,7 @@ export class MarkdownString {
     this.value += '\n';
     this.value += code;
     this.value += '\n```\n';
-    
+
     return this;
   }
 
@@ -43,7 +33,7 @@ export class MarkdownString {
       value: this.value
     }
   }
-  
+
   static escapeMarkdownSyntaxTokens(text: string) {
     return text.replace(/([\\`*_{}[\]()#+\-.!])/g, '\\$1')
   }
