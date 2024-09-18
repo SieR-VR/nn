@@ -1,4 +1,4 @@
-import { Declaration, Identifier, isCallExpression, isIdentifierExpression, travel } from "nn-language";
+import { Declaration, Identifier, isCallExpression, isIdentifierExpression, isSizeNode, travel } from "nn-language";
 import { Result, Ok, Err, Option, Some, None } from "ts-features";
 
 import { DeclarationScope, FileScope, Size, Value, ResolveError, Flow } from "./types";
@@ -128,7 +128,7 @@ export function resolveNames(sourceCode: Declaration[], path: string): Result<Fi
   // Resolve size names pass
   sourceCode.forEach(decl => {
     const declScope = fileScope.declarations[decl.name.value];
-    const callExpressions = travel(decl.exprs, isCallExpression);
+    const sizeNodes = travel(decl.exprs, isSizeNode);
 
     decl.sizeDeclList && decl.sizeDeclList.decls
       .forEach(size => {
@@ -136,32 +136,31 @@ export function resolveNames(sourceCode: Declaration[], path: string): Result<Fi
       });
 
     decl.argumentList.args
-      .flatMap(arg => arg.valueType.sizes)
-      .filter(size => !!size)
+      .filter(arg => arg.valueType.sizes)
+      .flatMap(arg => travel(arg.valueType.sizes!, isSizeNode))
+      .filter(size => size.sizeType === "ident")
       .forEach(size => {
-        if (!size || typeof size === "number") {
-          return;
-        }
-
-        const sizeScope = findSize(declScope, size);
+        const ident = size.ident!;
+        const sizeScope = findSize(declScope, ident);
 
         if (sizeScope) {
           sizeScope.nodes.add(size);
         } else {
-          declScope.sizes[size.value] = toSize(declScope, size);
+          declScope.sizes[ident.value] = toSize(declScope, ident);
         }
       });
 
 
-    callExpressions
-      .flatMap(sizeDeclList => sizeDeclList.sizes)
-      .filter(ident => !!ident)
+    sizeNodes
+      .flatMap(sizeNode => travel(sizeNode, isSizeNode))
       .filter(ident => typeof ident !== "number" && typeof ident !== "undefined")
-      .forEach(ident => {
-        const size = findSize(declScope, ident);
+      .filter(ident => ident.sizeType === "ident")
+      .forEach(size => {
+        const ident = size.ident!;
+        const sizeScope = findSize(declScope, ident);
 
-        if (size) {
-          size.nodes.add(ident);
+        if (sizeScope) {
+          sizeScope.nodes.add(ident);
         } else {
           errors.push({
             message: `Using undeclared size name '${ident.value}'.`,

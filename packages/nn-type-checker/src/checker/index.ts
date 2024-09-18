@@ -1,21 +1,50 @@
 import { match_string, Result, Ok, Err } from "ts-features";
 
-import { CallExpression, Declaration, Expression, Identifier, isCallExpression, isIdentifierExpression, isTupleExpression, Node, travel, TypeNode } from "nn-language";
+import { CallExpression, Declaration, Expression, Identifier, isCallExpression, isIdentifierExpression, isTupleExpression, Node, SizeNode, travel, TypeNode } from "nn-language";
 import { DeclarationScope, findValue, findSize } from "../resolver";
-import { Vertex, Type, TypeError } from "./types";
+import { Vertex, Type, TypeError, SizeType } from "./types";
+
+function toSizeType(node: SizeNode, scope: DeclarationScope): SizeType {
+  return match_string<SizeType, SizeNode["sizeType"]>(node.sizeType, {
+    add: () => ({
+      left: toSizeType(node.left!, scope),
+      right: toSizeType(node.right!, scope),
+
+      computeKind: 'add',
+      type: 'Size',
+    }),
+    mul: () => ({
+      left: toSizeType(node.left!, scope),
+      right: toSizeType(node.right!, scope),
+
+      computeKind: 'mul',
+      type: 'Size',
+    }),
+    pow: () => ({
+      left: toSizeType(node.left!, scope),
+      right: toSizeType(node.right!, scope),
+
+      computeKind: 'pow',
+      type: 'Size',
+    }),
+    ident: () => ({
+      left: findSize(scope, node.ident!)!,
+      computeKind: 'ident',
+      type: 'Size',
+    }),
+    number: () => ({
+      left: node.number!,
+      computeKind: 'number',
+      type: 'Size',
+    })
+  })
+}
 
 function toType(node: TypeNode | CallExpression, scope: DeclarationScope): Type {
   return {
     type: 'Tensor',
     shape: node.sizes 
-      ? node.sizes.map(shape => {
-        if (typeof shape === 'number') {
-          return shape;
-        }
-
-        const size = findSize(scope, shape)!;
-        return size;
-      })
+      ? node.sizes.map(size => toSizeType(size, scope))
       : []
   }
 }

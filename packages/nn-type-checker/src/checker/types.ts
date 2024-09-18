@@ -3,7 +3,15 @@ import { Size } from "../resolver";
 
 export interface Type {
   type: 'Tensor';
-  shape: (Size | number)[];
+  shape: SizeType[];
+}
+
+export interface SizeType {
+  type: 'Size';
+  left: Size | SizeType | number;
+  right?: SizeType;
+
+  computeKind: 'pow' | 'mul' | 'add' | 'ident' | 'number';
 }
 
 export interface Vertex {

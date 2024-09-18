@@ -135,7 +135,7 @@ connection.onHover((handler) => {
 
   if (vertex.type !== null) {
     markdown.appendCodeblock(
-      `Tensor[${vertex.type.shape.map(size => typeof size === 'number' ? size : size.ident).join(', ')}]`,
+      `Tensor[${vertex.type.shape.join(', ')}]`,
       'nn'
     );
   }
