@@ -1,4 +1,4 @@
-import { Token } from 'nn-language/parser'
+import { Token } from 'nn-language'
 import { MarkupContent, SymbolKind } from 'vscode-languageserver';
 
 export function getSymbolKind(token: Token): SymbolKind {
