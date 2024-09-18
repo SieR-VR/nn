@@ -1,7 +1,7 @@
 import { JestConfigWithTsJest } from "ts-jest";
 
 const config: JestConfigWithTsJest = {
-  roots: ['./test'],
+  roots: ['./tests'],
   preset: "ts-jest",
 }
 

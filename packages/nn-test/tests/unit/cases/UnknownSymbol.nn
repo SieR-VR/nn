@@ -1,0 +1,2 @@
+UnknownSymbol(x: Tensor[a, b, c]) =%
+ x

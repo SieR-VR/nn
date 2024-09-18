@@ -1,2 +1,0 @@
-Entry(x: Tensor[a, b, c]) =
- x

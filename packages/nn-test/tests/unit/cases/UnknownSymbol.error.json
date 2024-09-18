@@ -1,0 +1,6 @@
+[
+  {
+    "message": "Line 1, col 36: expected \" identifier \", \"'\", a letter, \"$\", or \"_\"",
+    "position": { "end": 35, "pos": 35 }
+  }
+]
