@@ -1,4 +1,8 @@
-import type { Node } from "nn-language";
+import type { Declaration, Node } from "nn-language";
+
+import { Value } from "./value";
+import { Size } from "./size";
+import { Flow } from "./flow";
 
 export interface FileScope {
   path: string;
@@ -11,28 +15,9 @@ export interface DeclarationScope {
   declaration: string;
 
   flow: Flow;
-  node: Node;
+  node: Declaration;
   sizes: Record<string, Size>;
   values: Record<string, Value>;
-}
-
-export interface Flow {
-  calls: Set<Flow>;
-  declaration: string;
-}
-
-export interface Size {
-  scope: DeclarationScope;
-  ident: string;
-
-  nodes: Set<Node>;
-}
-
-export interface Value {
-  scope: DeclarationScope;
-  ident: string;
-
-  nodes: Set<Node>;
 }
 
 export interface ResolveError {

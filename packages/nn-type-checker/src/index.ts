@@ -1,6 +1,6 @@
 import { Declaration, Node } from 'nn-language';
 import { checker, Vertex } from './checker';
-import { FileScope, resolveNames } from './resolver';
+import { FileScope, resolve } from './resolver';
 
 export * from './resolver'
 export * from './checker'
@@ -22,7 +22,7 @@ export interface CheckerContext {
 export function check(syntaxTree: Declaration[], path: string): CheckerContext {
   const ctx: Partial<CheckerContext> = { path }
 
-  const resolverResult = resolveNames(syntaxTree, path);
+  const resolverResult = resolve(syntaxTree, path);
   if (resolverResult.is_err()) {
     const diagnostics = resolverResult.unwrap_err();
     return { ...ctx, diagnostics } as CheckerContext;
