@@ -1,5 +1,5 @@
 import { Node } from "nn-language";
-import { Size } from "../resolver";
+import { Size } from "../resolver/size";
 
 export interface Type {
   type: 'Tensor';
