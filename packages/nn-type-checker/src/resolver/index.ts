@@ -83,3 +83,6 @@ export function resolve(sourceCode: Declaration[], path: string): Result<FileSco
 }
 
 export * from './types'
+export * from './value'
+export * from './size'
+export * from './flow'

@@ -1,7 +1,10 @@
 import { match_string, Result, Ok, Err } from "ts-features";
 
 import { CallExpression, Declaration, Expression, Identifier, isCallExpression, isIdentifierExpression, isTupleExpression, Node, SizeNode, travel, TypeNode } from "nn-language";
-import { DeclarationScope, findValue, findSize } from "../resolver";
+import { DeclarationScope } from "../resolver";
+import { findSize } from "../resolver/size";
+import { findValue } from "../resolver/value";
+
 import { Vertex, Type, TypeError, SizeType } from "./types";
 
 function toSizeType(node: SizeNode, scope: DeclarationScope): SizeType {
