@@ -1,17 +1,19 @@
-import { Wrapper, Position } from "./types"
+import { SyntaxNode } from "tree-sitter"
+
+import { Position } from "./types"
 import { Node } from "./ast"
 
-export function toPosition(wrapper: Wrapper | Wrapper[]): Position {
-  if (Array.isArray(wrapper)) {
+export function toPosition(node: SyntaxNode | SyntaxNode[]): Position {
+  if (Array.isArray(node)) {
     return {
-      pos: wrapper[0].source.startIdx,
-      end: wrapper[wrapper.length - 1].source.endIdx,
+      pos: node[0].startIndex,
+      end: node[node.length - 1].endIndex,
     }
   }
 
   return {
-    pos: wrapper.source.startIdx,
-    end: wrapper.source.endIdx,
+    pos: node.startIndex,
+    end: node.endIndex
   }
 }
 

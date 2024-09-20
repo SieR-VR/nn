@@ -54,13 +54,12 @@ export interface CallExpression extends Node {
 }
 
 export interface StringLiteralExpression extends Node {
-  value: Identifier
+  value: string
 
   type: "StringLiteralExpression"
 }
 
 export type Expression = IdentifierExpression | CallExpression | TupleExpression | StringLiteralExpression
-
 
 export interface SizeNode extends Node {
   left?: SizeNode

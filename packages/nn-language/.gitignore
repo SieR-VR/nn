@@ -1,1 +1,10 @@
 out
+
+# tree-sitter build output
+
+build
+bindings
+
+# tree-sitter
+
+src

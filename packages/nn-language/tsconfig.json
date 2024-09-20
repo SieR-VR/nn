@@ -4,8 +4,10 @@
     "noEmit": false,
     "declaration": true,
 
+    "esModuleInterop": true,
+
     "outDir": "out", 
-    "rootDir": "."
+    "rootDir": "./wrapper"
   },
   "exclude": [
     "out"
