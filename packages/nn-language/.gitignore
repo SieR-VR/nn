@@ -8,3 +8,11 @@ bindings
 # tree-sitter
 
 src
+.editorconfig
+
+Cargo.toml
+go.mod
+Makefile
+Package.swift
+pyproject.toml
+setup.py
