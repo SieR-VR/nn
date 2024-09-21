@@ -6,7 +6,7 @@
     "declaration": true,
 
     "outDir": "out",
-    "rootDir": "."
+    "rootDir": "src"
   },
   "exclude": [
     "out"
