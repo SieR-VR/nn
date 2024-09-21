@@ -1,5 +1,7 @@
-import { Node, Identifier, Declaration, travel, isSizeNode } from "nn-language";
-import { DeclarationScope, FileScope, ResolveError } from "./types";
+import { Node, Identifier, travel, isSizeNode } from "nn-language";
+import { DeclarationScope } from "./scope";
+
+import { Diagnostic } from "..";
 
 export interface Size {
   scope: DeclarationScope;
@@ -21,8 +23,8 @@ export function toSize(scope: DeclarationScope, ident: Identifier): Size {
   };
 }
 
-export function resolveSizes(scope: DeclarationScope): ResolveError[] {
-  const errors: ResolveError[] = [];
+export function resolveSizes(scope: DeclarationScope): Diagnostic[] {
+  const errors: Diagnostic[] = [];
 
   scope.node.sizeDeclList && scope.node.sizeDeclList.decls
     .forEach(size => {

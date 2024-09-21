@@ -1,4 +1,4 @@
-import type { Declaration, Node } from "nn-language";
+import type { Declaration } from "nn-language";
 
 import { Value } from "./value";
 import { Size } from "./size";
@@ -18,9 +18,4 @@ export interface DeclarationScope {
   node: Declaration;
   sizes: Record<string, Size>;
   values: Record<string, Value>;
-}
-
-export interface ResolveError {
-  message: string;
-  node: Node;
 }

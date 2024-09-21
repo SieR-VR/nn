@@ -1,12 +1,14 @@
 import { Declaration } from "nn-language";
 import { Result, Ok, Err } from "ts-features";
 
-import { DeclarationScope, FileScope, ResolveError } from "./types";
+import { DeclarationScope, FileScope } from "./scope";
 import { resolveValues } from "./value";
 import { resolveSizes } from "./size";
 import { defaultFlows, findCircularFlow, resolveFlows } from "./flow";
 
-export function resolve(sourceCode: Declaration[], path: string): Result<FileScope, ResolveError[]> {
+import { Diagnostic } from "..";
+
+export function resolve(sourceCode: Declaration[], path: string): Result<FileScope, Diagnostic[]> {
   const fileScope: FileScope = {
     path,
     declarations: {},
@@ -62,7 +64,7 @@ export function resolve(sourceCode: Declaration[], path: string): Result<FileSco
           return {
             message: `Circular flow detected from '${flows.map(flow => flow.declaration).join(', ')}'.`,
             node: fileScope.declarations[flows[0].declaration].node
-          } as ResolveError;
+          } as Diagnostic;
         }
       })
       .filter((error) => error !== undefined);
@@ -82,7 +84,7 @@ export function resolve(sourceCode: Declaration[], path: string): Result<FileSco
   return Ok(fileScope);
 }
 
-export * from './types'
+export * from './scope'
 export * from './value'
 export * from './size'
 export * from './flow'

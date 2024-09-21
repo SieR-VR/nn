@@ -1,6 +1,8 @@
 import { None, Option, Some } from "ts-features";
-import { DeclarationScope, FileScope, ResolveError } from "./types";
 import { isCallExpression, travel } from "nn-language";
+
+import { DeclarationScope, FileScope } from "./scope";
+import { Diagnostic } from "..";
 
 export interface Flow {
   calls: Set<Flow>;
@@ -13,8 +15,8 @@ export const defaultFlows: Record<string, Flow> = {
   "Bias": { calls: new Set(), declaration: "Bias" }
 }
 
-export function resolveFlows(scope: FileScope): ResolveError[] {
-  const errors: ResolveError[] = [];
+export function resolveFlows(scope: FileScope): Diagnostic[] {
+  const errors: Diagnostic[] = [];
   const names = Object.values(scope.declarations).map(decl => decl.declaration);
 
   const resolveDeclScope = (declScope: DeclarationScope) =>

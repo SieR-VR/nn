@@ -1,5 +1,7 @@
-import { type Node, type Identifier, type Declaration, isIdentifierExpression, travel } from "nn-language";
-import { DeclarationScope, FileScope, ResolveError } from "./types";
+import { Node, Identifier, isIdentifierExpression, travel } from "nn-language";
+import { DeclarationScope } from "./scope";
+
+import { Diagnostic } from "..";
 
 export interface Value {
   scope: DeclarationScope;
@@ -21,8 +23,8 @@ export function toValue(scope: DeclarationScope, ident: Identifier): Value {
   };
 }
 
-export function resolveValues(scope: DeclarationScope): ResolveError[] {
-  const errors: ResolveError[] = [];
+export function resolveValues(scope: DeclarationScope): Diagnostic[] {
+  const errors: Diagnostic[] = [];
 
   scope.node.argumentList.args
     .forEach(arg => {
