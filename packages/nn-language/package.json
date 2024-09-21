@@ -19,6 +19,7 @@
     "prebuildify": "^6.0.1"
   },
   "scripts": {
+    "preinstall": "tree-sitter generate",
     "install": "node-gyp-build",
     "prestart": "tree-sitter build --wasm",
     "start": "tree-sitter playground",
