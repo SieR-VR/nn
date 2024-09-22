@@ -61,7 +61,7 @@ export function convertDeclaration(node: Parser.SyntaxNode): Declaration {
     sizeDeclList: convertSizeDeclList(node.child(1)),
     argumentList: convertArgumentList(node.child(2)),
 
-    firstPipe: node.childForFieldName("firstPipe") !== null,
+    firstPipe: node.child(5) !== null,
     exprs: node.namedChildren
       .filter((child) => child.type === "expression")
       .map(convertExpression),
