@@ -8,6 +8,7 @@ export interface Value {
   ident: string;
 
   nodes: Set<Node>;
+  first: Node;
 }
 
 export function findValue(scope: DeclarationScope, ident: Identifier): Value | undefined {
@@ -19,7 +20,8 @@ export function toValue(scope: DeclarationScope, ident: Identifier): Value {
     scope,
     ident: ident.value,
 
-    nodes: new Set([ident])
+    nodes: new Set([ident]),
+    first: ident
   };
 }
 

@@ -4,30 +4,40 @@ import { Result, Ok, Err } from "ts-features";
 import { DeclarationScope, FileScope } from "./scope";
 import { resolveValues } from "./value";
 import { resolveSizes } from "./size";
-import { defaultFlows, findCircularFlow, resolveFlows } from "./flow";
+import { findCircularFlow, Flow, resolveFlows } from "./flow";
 
 import { Diagnostic } from "..";
 
-export function resolve(sourceCode: Declaration[], path: string): Result<FileScope, Diagnostic[]> {
+
+
+export function resolve(sourceCode: Declaration[], flows: Record<string, Flow>, path: string): Result<FileScope, Diagnostic[]> {
   const fileScope: FileScope = {
     path,
     declarations: {},
-    flows: defaultFlows
+    flows
   };
 
   sourceCode.forEach(decl => {
+    const flow: Flow = {
+      calls: new Set(),
+      declaration: decl.name.value,
+
+      sizes: [],
+      args: [],
+    }
+
     const declScope: DeclarationScope = {
       file: fileScope,
       declaration: decl.name.value,
 
       node: decl,
-      flow: { calls: new Set(), declaration: decl.name.value },
+      flow,
       sizes: {},
       values: {}
     };
 
     fileScope.declarations[decl.name.value] = declScope;
-    fileScope.flows[decl.name.value] = declScope.flow;
+    fileScope.flows[decl.name.value] = flow;
   });
 
   const resolveValueErrors = 

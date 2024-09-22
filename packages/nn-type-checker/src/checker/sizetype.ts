@@ -63,4 +63,69 @@ export namespace SizeType {
         return left.left === right.left;
     }
   }
+
+  export function isSameStructure(left: SizeType, right: SizeType): [SizeType, Size] | boolean {
+    if (right.computeKind !== 'ident' && (left.computeKind !== right.computeKind)) {
+      return false;
+    }
+
+    switch (right.computeKind) {
+      case 'add':
+      case 'mul':
+      case 'pow':
+        return isSameStructure(left.left as SizeType, right.left as SizeType) && isSameStructure(left.right as SizeType, right.right as SizeType);
+      case 'ident':
+        return [left, right.left] as [SizeType, Size];
+      case 'number':
+        return left.left === right.left;
+    }
+  }
+
+  export function convert(size: SizeType, dict: Map<Size, SizeType>): SizeType {
+    switch (size.computeKind) {
+      case 'add':
+        return {
+          left: convert(size.left as SizeType, dict),
+          right: convert(size.right as SizeType, dict),
+
+          computeKind: 'add',
+        };
+      case 'mul':
+        return {
+          left: convert(size.left as SizeType, dict),
+          right: convert(size.right as SizeType, dict),
+
+          computeKind: 'mul',
+        };
+      case 'pow':
+        return {
+          left: convert(size.left as SizeType, dict),
+          right: convert(size.right as SizeType, dict),
+
+          computeKind: 'pow',
+        };
+      case 'ident':
+        return dict.get(size.left as Size)!;
+      case 'number':
+        return {
+          left: size.left,
+          computeKind: 'number',
+        };
+    }
+  }
+
+  export function toString(size: SizeType): string {
+    switch (size.computeKind) {
+      case 'add':
+        return `${toString(size.left as SizeType)} + ${toString(size.right as SizeType)}`;
+      case 'mul':
+        return `${toString(size.left as SizeType)} * ${toString(size.right as SizeType)}`;
+      case 'pow':
+        return `${toString(size.left as SizeType)} ^ ${toString(size.right as SizeType)}`;
+      case 'ident':
+        return (size.left as Size).ident;
+      case 'number':
+        return size.left.toString();
+    }
+  }
 }

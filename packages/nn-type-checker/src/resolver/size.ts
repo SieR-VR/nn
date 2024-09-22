@@ -8,6 +8,7 @@ export interface Size {
   ident: string;
 
   nodes: Set<Node>;
+  first: Node;
 }
 
 export function findSize(scope: DeclarationScope, ident: Identifier): Size | undefined {
@@ -19,7 +20,8 @@ export function toSize(scope: DeclarationScope, ident: Identifier): Size {
     scope,
     ident: ident.value,
 
-    nodes: new Set([ident])
+    nodes: new Set([ident]),
+    first: ident,
   };
 }
 
