@@ -3755,15 +3755,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "nn-language@workspace:packages/nn-language"
   dependencies:
-    node-gyp-build: "npm:^4.8.1"
-    prebuildify: "npm:^6.0.1"
-    tree-sitter: "npm:^0.21.1"
-    tree-sitter-cli: "npm:^0.23.0"
-  peerDependencies:
-    tree-sitter: ^0.21.1
-  peerDependenciesMeta:
-    tree_sitter:
-      optional: true
+    nn-tree-sitter: "workspace:^"
   languageName: unknown
   linkType: soft
 
@@ -3777,6 +3769,22 @@ __metadata:
     nn-type-checker: "workspace:^"
     ts-jest: "npm:^29.2.5"
     typescript: "npm:^5.6.2"
+  languageName: unknown
+  linkType: soft
+
+"nn-tree-sitter@workspace:^, nn-tree-sitter@workspace:packages/nn-tree-sitter":
+  version: 0.0.0-use.local
+  resolution: "nn-tree-sitter@workspace:packages/nn-tree-sitter"
+  dependencies:
+    node-gyp-build: "npm:^4.8.1"
+    prebuildify: "npm:^6.0.1"
+    tree-sitter: "npm:^0.21.1"
+    tree-sitter-cli: "npm:^0.23.0"
+  peerDependencies:
+    tree-sitter: ^0.21.1
+  peerDependenciesMeta:
+    tree_sitter:
+      optional: true
   languageName: unknown
   linkType: soft
 

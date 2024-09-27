@@ -7,7 +7,7 @@
     "esModuleInterop": true,
 
     "outDir": "out", 
-    "rootDir": "./wrapper"
+    "rootDir": "src"
   },
   "exclude": [
     "out"
