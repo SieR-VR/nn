@@ -1,32 +1,31 @@
-import { Node } from "nn-language";
-import { FileScope, Size } from "../resolver";
+import { Some } from "ts-features";
+import { Size } from "../resolver";
 
-import { Diagnostic } from "..";
-import { getVertices, Vertex } from "./vertex";
-import { Edge, getEdges } from "./edge";
+import { CheckerContext } from "..";
+import { Vertex } from "./vertex";
+import { Edge } from "./edge";
 
 import { Type } from "./type";
 import { SizeType } from "./sizetype";
 
-export function checker(scope: FileScope, vertices: Map<Node, Vertex>): { vertices: Map<Node, Vertex>, diagnostics: Diagnostic[] } {
-  const diagnostics: Diagnostic[] = [];
+export function checker(context: CheckerContext) {
   const edges: Edge[] = [];
 
-  Object.values(scope.declarations)
-    .forEach(decl => getVertices(decl, vertices))
+  Object.values(context.scope.declarations)
+    .forEach(decl => Vertex.getAll(decl, context.vertices))
 
-  Object.values(scope.declarations)
-    .forEach(decl => getEdges(decl, vertices, edges, diagnostics))
+  Object.values(context.scope.declarations)
+    .forEach(decl => Edge.getAll(decl, edges, context))
 
   let passedCount = 0, lastPassedCount = -1;
 
   while (passedCount < edges.length && passedCount !== lastPassedCount) {
     edges.forEach(edge => {
       if (typeof edge.passed === "boolean") return;
-      if (!edge.callee.return.type) return;
+      if (edge.callee.return.type.is_none()) return;
       
       if (edge.callee.args.length !== edge.args.length) {
-        diagnostics.push({
+        context.diagnostics.push({
           message: `Expected ${edge.callee.args.length} arguments, but got ${edge.args.length}.`,
           node: edge.toSolve.expression
         });
@@ -41,16 +40,19 @@ export function checker(scope: FileScope, vertices: Map<Node, Vertex>): { vertic
         const arg = edge.args[i];
         const flowArg = edge.callee.args[i];
 
-        if (!arg.type || !flowArg.type) {
+        if (arg.type.is_none() || flowArg.type.is_none()) {
           continue;
         }
 
-        const result = Type.isAssignable(arg.type, flowArg.type);
+        const leftArg = arg.type.unwrap();
+        const rightArg = flowArg.type.unwrap();
+
+        const result = Type.isAssignable(leftArg, rightArg);
 
         if (typeof result === 'boolean') {
           if (!result) {
-            diagnostics.push({
-              message: `Cannot assign ${Type.toString(arg.type)} to ${Type.toString(flowArg.type)}.`,
+            context.diagnostics.push({
+              message: `Cannot assign ${Type.toString(leftArg)} to ${Type.toString(rightArg)}.`,
               node: arg.expression
             });
 
@@ -60,9 +62,9 @@ export function checker(scope: FileScope, vertices: Map<Node, Vertex>): { vertic
           continue;
         }
 
-        result.forEach(([a, b]) => {
-          left.push(a);
-          right.push(b);
+        result.forEach(([leftArg, rightArg]) => {
+          left.push(leftArg);
+          right.push(rightArg);
         });
       }
 
@@ -87,7 +89,7 @@ export function checker(scope: FileScope, vertices: Map<Node, Vertex>): { vertic
 
         for (const index of rest) {
           if (!SizeType.isSame(left[first], left[index])) {
-            diagnostics.push({
+            context.diagnostics.push({
               message: `Size mismatch: ${SizeType.toString(left[first])} != ${SizeType.toString(left[index])}.`,
               node: edge.toSolve.expression
             });
@@ -100,14 +102,17 @@ export function checker(scope: FileScope, vertices: Map<Node, Vertex>): { vertic
       });
 
       edge.passed = true;
-      edge.toSolve.type = Type.convert(edge.callee.return.type, sizeDict)
+      edge.toSolve.type = Some(
+        Type.convert(
+          edge.callee.return.type.unwrap(), 
+          sizeDict
+        )
+      )
     })
 
     lastPassedCount = passedCount;
     passedCount = edges.filter(edge => edge.passed === true).length;
   }
-
-  return { vertices: vertices, diagnostics };
 }
 
 export * from './vertex';

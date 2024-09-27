@@ -1,7 +1,7 @@
 import { match_string } from 'ts-features';
 import { SizeNode } from 'nn-language';
 
-import { DeclarationScope, findSize, Size } from '../resolver';
+import { DeclarationScope, Size } from '../resolver';
 
 export interface SizeType {
   left: Size | SizeType | number;
@@ -35,7 +35,7 @@ export namespace SizeType {
         type: 'Size',
       }),
       ident: () => ({
-        left: findSize(scope, node.ident!)!,
+        left: Size.find(scope, node.ident!).unwrap(),
         computeKind: 'ident',
         type: 'Size',
       }),

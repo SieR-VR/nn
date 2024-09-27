@@ -1,6 +1,7 @@
+import { None, Option, Some } from "ts-features";
 import { Node, Identifier, travel, isSizeNode } from "nn-language";
-import { DeclarationScope } from "./scope";
 
+import { DeclarationScope } from "./scope";
 import { Diagnostic } from "..";
 
 export interface Size {
@@ -11,56 +12,72 @@ export interface Size {
   first: Node;
 }
 
-export function findSize(scope: DeclarationScope, ident: Identifier): Size | undefined {
-  return scope.sizes[ident.value];
-}
+export namespace Size {
 
-export function toSize(scope: DeclarationScope, ident: Identifier): Size {
-  return {
-    scope,
-    ident: ident.value,
+  /**
+   * Finds a size in a declaration scope.
+   * 
+   * @param scope the declaration scope to search in
+   * @param ident the identifier to search for
+   * @returns None if the size is not found, Some(Size) if it is found
+   */
+  export function find(scope: DeclarationScope, ident: Identifier): Option<Size> {
+    return ident.value in scope.sizes
+      ? Some(scope.sizes[ident.value])
+      : None();
+  }
 
-    nodes: new Set([ident]),
-    first: ident,
-  };
-}
+  /**
+   * Creates a new size object from an identifier.
+   * 
+   * @param scope the declaration scope to create the size in
+   * @param ident the identifier to create the size from
+   * @returns a new size object
+   */
+  export function make(scope: DeclarationScope, ident: Identifier): Size {
+    return {
+      scope,
+      ident: ident.value,
 
-export function resolveSizes(scope: DeclarationScope): Diagnostic[] {
-  const errors: Diagnostic[] = [];
+      nodes: new Set([ident]),
+      first: ident,
+    };
+  }
 
-  scope.node.sizeDeclList && scope.node.sizeDeclList.decls
-    .forEach(size => {
-      scope.sizes[size.value] = toSize(scope, size);
-    });
+  /**
+   * Resolves sizes in a declaration scope.
+   * 
+   * @param scope to resolve sizes in
+   * @param diagnostics to add errors to
+   */
+  export function resolve(scope: DeclarationScope, diagnostics: Diagnostic[]): void {
+    scope.node.sizeDeclList && scope.node.sizeDeclList.decls
+      .forEach(size => {
+        scope.sizes[size.value] = make(scope, size);
+      });
 
-  travel(scope.node.argumentList, isSizeNode)
-    .filter(size => size.sizeType === "ident")
-    .forEach(size => {
-      const ident = size.ident!;
-      const sizeScope = findSize(scope, ident);
+    travel(scope.node.argumentList, isSizeNode)
+      .filter(size => size.sizeType === "ident")
+      .forEach(sizeNode =>
+        find(scope, sizeNode.ident!)
+          .map_or_else<unknown>(
+            () => scope.sizes[sizeNode.ident!.value] = make(scope, sizeNode.ident!),
+            (size) => size.nodes.add(sizeNode),
+          )
+      );
 
-      if (sizeScope) {
-        sizeScope.nodes.add(size);
-      } else {
-        scope.sizes[ident.value] = toSize(scope, ident);
-      }
-    });
+    travel(scope.node.exprs, isSizeNode)
+      .filter(ident => ident.sizeType === "ident")
+      .forEach(sizeNode =>
+        find(scope, sizeNode.ident!)
+          .map_or_else<unknown>(
+            () => diagnostics.push({
+              message: `Using undeclared size name '${sizeNode.ident!.value}'.`,
+              node: sizeNode
+            }),
+            (size) => size.nodes.add(sizeNode)
+          )
+      );
+  }
 
-  travel(scope.node.exprs, isSizeNode)
-    .filter(ident => ident.sizeType === "ident")
-    .forEach(size => {
-      const ident = size.ident!;
-      const sizeScope = findSize(scope, ident);
-
-      if (sizeScope) {
-        sizeScope.nodes.add(ident);
-      } else {
-        errors.push({
-          message: `Using undeclared size name '${ident.value}'.`,
-          node: ident
-        });
-      }
-    });
-
-  return errors;
 }

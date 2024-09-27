@@ -1,40 +1,65 @@
 import { None, Option, Some } from "ts-features";
-import { Expression, Identifier, isCallExpression, Node, travel } from "nn-language";
+import { Expression, Identifier, isCallExpression, travel } from "nn-language";
 
 import { DeclarationScope, FileScope } from "./scope";
-import { Diagnostic, findSize, Size, toSize, toValue, Value } from "..";
+import { Diagnostic, Size, Value } from "..";
 
 export interface Flow {
   calls: Set<Flow>;
-  declaration: string;
+  declaration: DeclarationScope;
 
   sizes: Size[];
   args: Value[];
   return?: Expression | Identifier;
 }
 
-export function resolveFlows(scope: FileScope): Diagnostic[] {
-  const errors: Diagnostic[] = [];
+export namespace Flow {
 
-  const resolveFlow = (declScope: DeclarationScope) => {
-    const flow = scope.flows[declScope.declaration];
+  /**
+   * Creates a new flow object from a declaration scope.
+   * 
+   * Should be called **after** the sizes and values have been resolved.
+   * 
+   * @param scope The declaration scope to create a flow from.
+   * @returns A new flow object.
+   */
+  export function make(scope: DeclarationScope): Flow {
+    const flow: Flow = {
+      calls: new Set(),
+      declaration: scope,
 
-    flow.sizes = declScope.node.sizeDeclList?.decls.map(decl => findSize(declScope, decl)!) ?? [];
-    flow.args = declScope.node.argumentList.args.map(arg => declScope.values[arg.ident.value]);
-    flow.return = declScope.node.exprs.at(-1);
+      sizes: [],
+      args: []
+    }
+
+    scope.flow = flow;
+    return flow;
   }
 
-  const resolveFlowCall = (declScope: DeclarationScope) =>
-    travel(declScope.node, isCallExpression)
+  function _resolveInternal(scope: DeclarationScope, errors: Diagnostic[]): void {
+    const flow = scope.flow!;
+
+    flow.sizes = scope.node.sizeDeclList
+      ? scope.node.sizeDeclList.decls.map(
+        decl =>
+          Size.find(scope, decl).unwrap()
+      )
+      : [];
+    flow.args = scope.node.argumentList.args.map(arg => scope.values[arg.ident.value]);
+    flow.return = scope.node.exprs.at(-1);
+  }
+
+  function _resolveCallInternal(scope: DeclarationScope, errors: Diagnostic[]): void {
+    travel(scope.node, isCallExpression)
       .forEach(callExpression => {
-        if (callExpression.callee.value === declScope.declaration) {
+        if (callExpression.callee.value === scope.declaration) {
           errors.push({
-            message: `Recursive call to '${declScope.declaration}'.`,
+            message: `Recursive call to '${scope.declaration}'.`,
             node: callExpression.callee
           });
-        } else if (callExpression.callee.value in scope.flows) {
-          const callFlow = scope.flows[callExpression.callee.value];
-          declScope.flow.calls.add(callFlow);
+        } else if (callExpression.callee.value in scope.file.flows) {
+          const callFlow = scope.file.flows[callExpression.callee.value];
+          scope.flow!.calls.add(callFlow);
         } else {
           errors.push({
             message: `Using undeclared flow name '${callExpression.callee.value}'.`,
@@ -42,40 +67,53 @@ export function resolveFlows(scope: FileScope): Diagnostic[] {
           });
         }
       });
-
-  Object.values(scope.declarations)
-    .forEach(resolveFlow);
-  
-  Object.values(scope.declarations)
-    .forEach(resolveFlowCall);
-
-  return errors;
-}
-
-export function findCircularFlow(flow: Flow): Option<Flow[]>  {
-  const flows: Flow[] = [];
-
-  const visit = (flow: Flow): boolean => {
-    if (flows.includes(flow)) {
-      return true;
-    }
-
-    flows.push(flow);
-
-    for (const callFlow of flow.calls) {
-      if (visit(callFlow)) {
-        return true;
-      }
-    }
-
-    flows.pop();
-
-    return false;
   }
 
-  if (visit(flow)) {
-    return Some(flows);
+  /**
+   * Resolves the flows in a file scope.
+   * 
+   * Expected diagnostic list:
+   * - Using undeclared flow name
+   * - Self-recursive call to flow
+   * 
+   * @param scope the file scope to resolve the flows in.
+   * @param diagnostics to add errors to.
+   */
+  export function resolve(scope: FileScope, diagnostics: Diagnostic[]): void {
+    Object.values(scope.declarations)
+      .forEach((declaration) => _resolveInternal(declaration, diagnostics));
+
+    Object.values(scope.declarations)
+      .forEach((declaration) => _resolveCallInternal(declaration, diagnostics));
   }
 
-  return None();
+  /**
+   * Utility function to find circular flows.
+   * 
+   * @param flow 
+   * @returns None if no circular flows are found, Some with the circular flows list otherwise.
+   */
+  export function findCircular(flow: Flow): Option<Flow[]> {
+    const flows: Flow[] = [];
+
+    const visit = (flow: Flow): boolean => {
+      if (flows.includes(flow)) return true;
+      flows.push(flow);
+
+      for (const callFlow of flow.calls)
+        if (visit(callFlow))
+          return true;
+
+      flows.pop();
+      return false;
+    }
+
+    if (visit(flow)) {
+      return Some(flows);
+    }
+
+    return None();
+  }
+
 }
+
