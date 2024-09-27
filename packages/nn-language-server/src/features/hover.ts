@@ -52,10 +52,11 @@ export async function hover(params: TextDocumentPositionParams, context: LspCont
 
   const markdown = new MarkdownString();
 
-  if (vertex.type !== null) {
+  if (vertex.type.is_some()) {
     markdown.appendCodeblock(
       `Tensor[${
-        vertex.type.shape
+        vertex.type.unwrap()
+          .shape
           .map(sizeTypeToString)
           .join(', ')
       }]`,
