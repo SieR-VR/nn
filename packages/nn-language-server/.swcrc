@@ -6,7 +6,11 @@
             "tsx": false
         },
         "transform": {},
-        "target": "es2019"
+        "target": "es2015"
     },
+    "module": {
+        "type": "commonjs"
+    },
+    "sourceMaps": true,
     "exclude": ["out"]
 }

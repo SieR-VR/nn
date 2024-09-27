@@ -5,6 +5,7 @@
     "declaration": true,
 
     "esModuleInterop": true,
+    "sourceMap": true,
 
     "outDir": "out", 
     "rootDir": "src"
