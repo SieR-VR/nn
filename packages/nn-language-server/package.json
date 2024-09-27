@@ -28,7 +28,7 @@
   },
   "main": "out/client/extension.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "yarn run -T swc . -d ./out"
   },
   "dependencies": {
     "commander": "^12.1.0",

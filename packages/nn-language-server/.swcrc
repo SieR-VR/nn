@@ -1,0 +1,12 @@
+{
+    "$schema": "https://swc.rs/schema.json",
+    "jsc": {
+        "parser": {
+            "syntax": "typescript",
+            "tsx": false
+        },
+        "transform": {},
+        "target": "es2019"
+    },
+    "exclude": ["out"]
+}

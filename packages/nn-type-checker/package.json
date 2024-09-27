@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "yarn run -T swc ./src -d ./out"
   },
-  "main": "out/index.js",
-  "typings": "out/index.d.ts"
+  "main": "out/src/index.js",
+  "typings": "src/index.ts"
 }

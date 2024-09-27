@@ -24,12 +24,13 @@
     "prestart": "tree-sitter build --wasm",
     "start": "tree-sitter playground",
     "test": "node --test bindings/node/*_test.js",
-    "build": "yarn run build:tree-sitter && tsc",
-    "build:tree-sitter": "tree-sitter generate && yarn run install"
+    "build": "yarn run build:tree-sitter && yarn run build:swc",
+    "build:tree-sitter": "tree-sitter generate && yarn run install",
+    "build:swc": "cd wrapper && yarn run -T swc . -d ../out --config-file ../.swcrc"
   },
   "main": "out/index.js",
   "types": "bindings/node",
-  "typings": "out/index.d.ts",
+  "typings": "wrapper/index.ts",
   "files": [
     "grammar.js",
     "binding.gyp",
