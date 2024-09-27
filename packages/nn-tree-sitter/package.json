@@ -26,7 +26,7 @@
     "test": "node --test bindings/node/*_test.js",
     "build": "tree-sitter generate && yarn run install"
   },
-  "main": "binding/node/index.js",
+  "main": "bindings/node/index.js",
   "types": "bindings/node",
   "typings": "bindings/node/index.d.ts",
   "files": [
