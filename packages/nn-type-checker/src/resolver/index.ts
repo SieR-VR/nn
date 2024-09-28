@@ -1,7 +1,7 @@
 import { Declaration } from "nn-language";
 
 import { Scope } from "./scope";
-import { Value, Size, Flow, CheckerContext } from "..";
+import { Value, Size, Flow, TypeChecker } from "..";
 
 /**
  * Resolves the names in the syntax tree.
@@ -10,7 +10,7 @@ import { Value, Size, Flow, CheckerContext } from "..";
  * @param path the path of the file
  * @param context the context of the checker
  */
-export function resolve(source: Declaration[], path: string, context: CheckerContext): void {
+export function resolve(source: Declaration[], path: string, context: TypeChecker): void {
   context.scope = Scope.makeFile(path);
   context.scope.flows = { ...context.globalFlows };
 
@@ -24,13 +24,13 @@ export function resolve(source: Declaration[], path: string, context: CheckerCon
 
   Object
     .values(context.scope.declarations)
-    .flatMap((scope) => Value.resolve(scope, context.diagnostics));
+    .flatMap((scope) => Value.resolve(scope, context));
 
   Object
     .values(context.scope.declarations)
-    .flatMap((scope) => Size.resolve(scope, context.diagnostics));
+    .flatMap((scope) => Size.resolve(scope, context));
 
-  Flow.resolve(context.scope, context.diagnostics);
+  Flow.resolve(context.scope, context);
 
   Object
     .values(context.scope.declarations)

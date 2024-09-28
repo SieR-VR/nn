@@ -47,7 +47,7 @@ export const libs = (() => {
   }
 
   const trainable = fake("Trainable", ["input"], [], ["input"]);
-  const matmul = fake("MatMul", ["input", "output"], [["input"], ["output"]], ["output"]);
+  const matmul = fake("MatMul", ["input", "output"], [["input"], ["input", "output"]], ["output"]);
   const bias = fake("Bias", ["output"], [["output"], ["output"]], ["output"]);
 
   return {

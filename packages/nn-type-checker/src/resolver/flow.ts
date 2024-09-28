@@ -2,7 +2,7 @@ import { None, Option, Some } from "ts-features";
 import { Expression, Identifier, isCallExpression, travel } from "nn-language";
 
 import { DeclarationScope, FileScope } from "./scope";
-import { Diagnostic, Size, Value } from "..";
+import { Diagnostic, Size, TypeChecker, Value } from "..";
 
 export interface Flow {
   calls: Set<Flow>;
@@ -36,7 +36,7 @@ export namespace Flow {
     return flow;
   }
 
-  function _resolveInternal(scope: DeclarationScope, errors: Diagnostic[]): void {
+  function _resolveInternal(scope: DeclarationScope, _context: TypeChecker): void {
     const flow = scope.flow!;
 
     flow.sizes = scope.node.sizeDeclList
@@ -49,11 +49,11 @@ export namespace Flow {
     flow.return = scope.node.exprs.at(-1);
   }
 
-  function _resolveCallInternal(scope: DeclarationScope, errors: Diagnostic[]): void {
+  function _resolveCallInternal(scope: DeclarationScope, context: TypeChecker): void {
     travel(scope.node, isCallExpression)
       .forEach(callExpression => {
         if (callExpression.callee.value === scope.declaration) {
-          errors.push({
+          context.diagnostics.push({
             message: `Recursive call to '${scope.declaration}'.`,
             node: callExpression.callee
           });
@@ -61,7 +61,7 @@ export namespace Flow {
           const callFlow = scope.file.flows[callExpression.callee.value];
           scope.flow!.calls.add(callFlow);
         } else {
-          errors.push({
+          context.diagnostics.push({
             message: `Using undeclared flow name '${callExpression.callee.value}'.`,
             node: callExpression.callee
           });
@@ -79,12 +79,12 @@ export namespace Flow {
    * @param scope the file scope to resolve the flows in.
    * @param diagnostics to add errors to.
    */
-  export function resolve(scope: FileScope, diagnostics: Diagnostic[]): void {
+  export function resolve(scope: FileScope, context: TypeChecker): void {
     Object.values(scope.declarations)
-      .forEach((declaration) => _resolveInternal(declaration, diagnostics));
+      .forEach((declaration) => _resolveInternal(declaration, context));
 
     Object.values(scope.declarations)
-      .forEach((declaration) => _resolveCallInternal(declaration, diagnostics));
+      .forEach((declaration) => _resolveCallInternal(declaration, context));
   }
 
   /**

@@ -2,7 +2,7 @@ import { None, Option, Some } from "ts-features";
 import { Node, Identifier, isIdentifierExpression, travel } from "nn-language";
 
 import { DeclarationScope } from "./scope";
-import { Diagnostic } from "..";
+import { TypeChecker } from "..";
 
 export interface Value {
   scope: DeclarationScope;
@@ -50,7 +50,7 @@ export namespace Value {
    * @param scope to resolve values in
    * @param diagnostics to add errors to
    */
-  export function resolve(scope: DeclarationScope, diagnostics: Diagnostic[]): void {
+  export function resolve(scope: DeclarationScope, context: TypeChecker): void {
     scope.node.argumentList.args
       .forEach(arg =>
         scope.values[arg.ident.value] = make(scope, arg.ident)
@@ -60,7 +60,7 @@ export namespace Value {
       .forEach(identExpr =>
         find(scope, identExpr.ident)
           .map_or_else<unknown>(
-            () => diagnostics.push({
+            () => context.diagnostics.push({
               message: `Using undeclared value name '${identExpr.ident.value}'.`,
               node: identExpr.ident
             }),
