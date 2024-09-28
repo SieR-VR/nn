@@ -7,7 +7,7 @@ import {
 } from 'nn-language'
 
 import {
-  check,
+  TypeChecker,
   Size,
   SizeType,
 } from 'nn-type-checker'
@@ -27,11 +27,7 @@ export async function hover(params: TextDocumentPositionParams, context: LspCont
 
   const declarations = parseResult.unwrap();
 
-  const checkContext = check(declarations, params.textDocument.uri);
-  if (!checkContext.vertices) {
-    return null;
-  }
-
+  const checkContext = TypeChecker.check(declarations, params.textDocument.uri);
   const hoverPosition = document.offsetAt(params.position);
 
   const node = nodeOnPosition(

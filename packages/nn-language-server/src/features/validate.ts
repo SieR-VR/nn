@@ -7,7 +7,7 @@ import {
   isDeclaration,
 } from 'nn-language'
 
-import { check } from "nn-type-checker";
+import { TypeChecker } from "nn-type-checker";
 
 import { LspContext } from "../types";
 import { ResourceMap } from "../utils/resourceMap";
@@ -54,7 +54,7 @@ export async function validateTextDocument(textDocumentUri: URI, context: LspCon
   const ast = parseResult.unwrap();
   const declarations = travel(ast, isDeclaration);
 
-  const checkContext = check(declarations, textDocument.uri);
+  const checkContext = TypeChecker.check(declarations, textDocument.uri);
 
   checkContext.diagnostics.forEach(diagnostic => {
     const { position } = diagnostic.node;
