@@ -6,7 +6,16 @@ nn is a domain-specific language designed to define deep neural network models.
 
 ## Installation
 
-!TODO
+```bash
+git clone https://github.com/SieR-VR/nn
+yarn install && yarn build
+```
+
+## Usage
+
+```bash
+yarn -f {input file} -o {output file}
+```
 
 ## Features
 

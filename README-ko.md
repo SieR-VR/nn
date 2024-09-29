@@ -6,7 +6,16 @@ nn은 딥 뉴럴 네트워크 모델을 정의하기 위해 만들어진 도메�
 
 ## 설치
 
-!TODO
+```bash
+git clone https://github.com/SieR-VR/nn
+yarn install && yarn build
+```
+
+## 사용법
+
+```bash
+yarn -f {input file} -o {output file}
+```
 
 ## 기능
 
