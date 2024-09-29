@@ -79,7 +79,6 @@ export interface TypeNode extends Node {
   type: "TypeNode"
 }
 
-
 export function isDeclaration(node: Node): node is Declaration {
   return node.type === "Declaration"
 }

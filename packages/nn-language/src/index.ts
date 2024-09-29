@@ -23,6 +23,7 @@ export function parse(input: string, oldTree?: Parser.Tree): Result<Declaration[
   const ast = parse.rootNode.children
     .filter((node) => node.type === "declaration")
     .map(convertDeclaration)
+    
   return Ok(ast);
 }
 
