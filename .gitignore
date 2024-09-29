@@ -6,7 +6,7 @@ node_modules
 compose-dev.yaml
 
 # Build result
-lib
+out
 
 # Auto-generated files
 ./src/ohm/*bundle*

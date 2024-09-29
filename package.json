@@ -7,9 +7,11 @@
   "keywords": [],
   "author": "SieR-VR",
   "license": "MIT",
+  "bin": "out/src/nn.js",
   "scripts": {
     "test": "yarn workspace nn-test test",
-    "build": "yarn workspaces foreach --all --parallel run build",
+    "build": "yarn workspaces foreach --all --parallel run build && yarn build:cli",
+    "build:cli": "yarn swc src -d out",
     "build:lang": "yarn workspace nn-language build",
     "build:checker": "yarn build:lang && yarn workspace nn-type-checker build",
     "build:lsp": "yarn build:checker && yarn workspace nn-language-server build"

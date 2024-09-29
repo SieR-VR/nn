@@ -9,7 +9,6 @@
     "strict": true,
 
 		"rootDir": ".",
-    "noEmit": true,
 	},
 	"exclude": [
 		"node_modules",

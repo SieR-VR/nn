@@ -1,7 +1,18 @@
 import { match_string } from "ts-features"
-import { ArgumentList, CallExpression, Declaration, Expression, Identifier, IdentifierExpression, isCallExpression, Node, SizeDeclList, StringLiteralExpression, travel, TupleExpression, TypeNode } from "nn-language"
+import { ArgumentList, CallExpression, Declaration, Expression, Identifier, IdentifierExpression, isCallExpression, Node, SizeDeclList, SizeNode, StringLiteralExpression, travel, TupleExpression, TypeNode } from "nn-language"
 
-const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]) => {
+const opsMap: Record<string, { tensorOp: boolean, target: string }> = {
+  "MatMul": {
+    tensorOp: true,
+    target: "dot"
+  },
+  "Bias": {
+    tensorOp: true,
+    target: "add"
+  }
+}
+
+const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node | undefined)[]) => {
   const convertType = (type: TypeNode) => {
     if (!type.isTensor) {
       // TODO if type is not tensor
@@ -12,16 +23,20 @@ const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]
   }
 
   const convertSize = ({ decls }: SizeDeclList) => {
-    return decls.join(", ")
+    return decls.map(decl => decl.value).join(", ")
   }
 
   const convertArguments = ({ args }: ArgumentList) => {
     return args
-      .map((arg) => `${arg.ident}: ${convertType(arg.valueType)}`)
+      .map((arg) => `${arg.ident.value}: ${convertType(arg.valueType)}`)
       .join(", ")
   }
 
-  const applier = (wildcard: string | Node) => {
+  const applier = (wildcard: string | Node | undefined) => {
+    if (wildcard === undefined) {
+      return ""
+    }
+
     if (typeof wildcard === "string") {
       return wildcard
     }
@@ -30,7 +45,7 @@ const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]
       "Type": () => convertType(wildcard as TypeNode),
       "SizeDeclList": () => convertSize(wildcard as SizeDeclList),
       "ArgumentList": () => convertArguments(wildcard as ArgumentList),
-      "_?": () => ""
+      "_": () => ""
     })
   }
 
@@ -41,14 +56,32 @@ const py = (strings: { raw: readonly string[] }, ...wildcards: (string | Node)[]
 }
 
 const pyinits = (decl: Declaration, indent: number = 4) => {
-  const calls = travel(decl, isCallExpression)
+  const synthSizeNode = (node: SizeNode): string => {
+    switch (node.sizeType) {
+      case "add":
+        return `(${synthSizeNode(node.left!)} + ${synthSizeNode(node.right!)})`
+      case "mul":
+        return `(${synthSizeNode(node.left!)} * ${synthSizeNode(node.right!)})`
+      case "pow":
+        return `(${synthSizeNode(node.left!)} ** ${synthSizeNode(node.right!)})`
+      case "ident":
+        return node.ident!.value
+      case "number":
+        return node.number!.toString()
+    }
+  }
 
-  const inits = calls
+  const inits = travel(decl, isCallExpression)
     .filter((call) => call.callee.value === 'Trainable')
     .map((call) => {
       const [name] = call.args as [StringLiteralExpression]
+      const value = name.value.replace(/["']/g, "")
 
-      return `self.${name.value} = Tensor.zeros(${call.sizes!.join(", ")})`
+      return `self.${value} = Tensor.zeros(${
+        call.sizes
+          ? call.sizes.map(synthSizeNode).join(", ")
+          : 0
+      })`
     })
 
   const indentStr = " ".repeat(indent)
@@ -73,12 +106,22 @@ const pyforward = (decl: Declaration, indent: number = 4) => {
 
         if (callee.value === 'Trainable') {
           const { value } = (expr as CallExpression).args[0] as StringLiteralExpression
-          return `self.${value}`
+          return `self.${value.replace(/["']/g, "")}`
         }
 
         const right = [...returns, ...args].map(toPythonExpression)
 
-        return `${callee}(${right.join(", ")})`
+        if (!(callee.value in opsMap)) return ''
+
+        if (opsMap[callee.value].tensorOp) {
+          const [first, ...rest] = right
+
+          return `${first}.${opsMap[callee.value].target}(${rest.join(", ")})`
+        }
+        else {
+          return `${callee.value}(${right.join(", ")})`
+        }
+
       },
       IdentifierExpression: () => {
         return (expr as IdentifierExpression).ident.value
