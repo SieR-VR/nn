@@ -14,7 +14,7 @@ yarn install && yarn build
 ## 사용법
 
 ```bash
-yarn -f {input file} -o {output file}
+yarn nn -f {input file} -o {output file}
 ```
 
 ## 기능

@@ -14,7 +14,7 @@ yarn install && yarn build
 ## Usage
 
 ```bash
-yarn -f {input file} -o {output file}
+yarn nn -f {input file} -o {output file}
 ```
 
 ## Features
