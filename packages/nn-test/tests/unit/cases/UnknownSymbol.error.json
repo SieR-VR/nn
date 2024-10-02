@@ -1,6 +1,1 @@
-[
-  {
-    "message": "Line 1, col 36: expected \" identifier \", \"'\", a letter, \"$\", or \"_\"",
-    "position": { "end": 35, "pos": 35 }
-  }
-]
+[{ "message": "Unexpected token '%'.", "position": { "end": 36, "pos": 35 } }]

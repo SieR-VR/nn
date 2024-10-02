@@ -75,7 +75,7 @@ export namespace Edge {
       if (!isCallExpression(firstExpression) && callNeeded) {
         context.diagnostics.push({
           message: 'First expression must be a function call if there is a pipe',
-          node: firstExpression
+          position: firstExpression.position
         })
 
         return;
@@ -140,7 +140,7 @@ export namespace Edge {
         if (!SizeType.isSame(left[first], left[index])) {
           context.diagnostics.push({
             message: `Size mismatch: ${SizeType.toString(left[first])} != ${SizeType.toString(left[index])}.`,
-            node: edge.args[index].expression
+            position: edge.args[index].expression.position
           });
 
           failed = true;
@@ -166,7 +166,7 @@ export namespace Edge {
     if (edge.callee.args.length !== edge.args.length) {
       context.diagnostics.push({
         message: `Expected ${edge.callee.args.length} arguments, but got ${edge.args.length}.`,
-        node: edge.toSolve.expression
+        position: edge.toSolve.expression.position
       });
 
       edge.passed = false; // unrecoverable
@@ -200,7 +200,7 @@ export namespace Edge {
               } to ${
                 Type.toString(firstRightArg.type.unwrap())
               }.`,
-              node: firstLeftArg.expression
+              position: firstLeftArg.expression.position
             });
 
             edge.passed = false; // unrecoverable
@@ -228,7 +228,7 @@ export namespace Edge {
                   } to ${
                     Type.toString(rightArg.type.unwrap())
                   }.`,
-                  node: leftArg.expression
+                  position: leftArg.expression.position
                 });
 
                 edge.passed = false; // unrecoverable

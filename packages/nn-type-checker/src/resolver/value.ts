@@ -60,10 +60,13 @@ export namespace Value {
       .forEach(identExpr =>
         find(scope, identExpr.ident)
           .map_or_else<unknown>(
-            () => context.diagnostics.push({
-              message: `Using undeclared value name '${identExpr.ident.value}'.`,
-              node: identExpr.ident
-            }),
+            () => {
+              context.diagnostics.push({
+                message: `Using undeclared value name '${identExpr.ident.value}'.`,
+                position: identExpr.ident.position
+              })
+              context.nonRecoverable = true;
+            },
             value => value.nodes.add(identExpr.ident)
           )
       );

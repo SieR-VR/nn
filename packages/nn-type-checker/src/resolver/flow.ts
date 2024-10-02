@@ -2,7 +2,7 @@ import { None, Option, Some } from "ts-features";
 import { Expression, Identifier, isCallExpression, travel } from "nn-language";
 
 import { DeclarationScope, FileScope } from "./scope";
-import { Diagnostic, Size, TypeChecker, Value } from "..";
+import { Size, TypeChecker, Value } from "..";
 
 export interface Flow {
   calls: Set<Flow>;
@@ -55,7 +55,7 @@ export namespace Flow {
         if (callExpression.callee.value === scope.declaration) {
           context.diagnostics.push({
             message: `Recursive call to '${scope.declaration}'.`,
-            node: callExpression.callee
+            position: callExpression.callee.position
           });
         } else if (callExpression.callee.value in scope.file.flows) {
           const callFlow = scope.file.flows[callExpression.callee.value];
@@ -63,7 +63,7 @@ export namespace Flow {
         } else {
           context.diagnostics.push({
             message: `Using undeclared flow name '${callExpression.callee.value}'.`,
-            node: callExpression.callee
+            position: callExpression.callee.position
           });
         }
       });

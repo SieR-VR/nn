@@ -2,7 +2,7 @@ import { DocumentSymbolParams, SemanticTokens, SemanticTokensBuilder, SymbolKind
 import { LspContext } from "../types";
 
 import {
-  parse,
+  SourceFile,
   travel,
   isCallExpression,
 } from 'nn-language'
@@ -16,18 +16,10 @@ export function semanticTokens(params: DocumentSymbolParams, context: LspContext
     return builder.build();
   }
 
-  const parseResult = parse(document.getText());
-  if (parseResult.is_err()) {
-    console.warn(`Failed to parse document: ${parseResult.unwrap_err()}`);
-    return builder.build();
-  }
+  const source = SourceFile.parse(document.getText());
+  const callExpressions = travel(source.tree, isCallExpression);
 
-  const ast = parseResult.unwrap();
-
-  const declarations = ast;
-  const callExpressions = travel(ast, isCallExpression);
-
-  for (const decl of declarations) {
+  for (const decl of source.tree) {
     const { position } = decl.name;
     const startPos = document.positionAt(position.pos);
 

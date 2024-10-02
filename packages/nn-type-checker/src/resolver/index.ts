@@ -36,10 +36,13 @@ export function resolve(source: Declaration[], path: string, context: TypeChecke
     .values(context.scope.declarations)
     .map(decl => decl.node.name)
     .filter((name, index, names) => names.indexOf(name) !== index)
-    .forEach(name => context.diagnostics.push({
-      message: `Duplicate function name '${name.value}'.`,
-      node: name
-    }));
+    .forEach(name => {
+      context.diagnostics.push({
+        message: `Duplicate function name '${name.value}'.`,
+        position: name.position
+      })
+      context.nonRecoverable = true;
+    });
 
   Object
     .values(context.scope.flows)
@@ -51,8 +54,9 @@ export function resolve(source: Declaration[], path: string, context: TypeChecke
 
         context.diagnostics.push({
           message: `Circular flow detected from '${flows.map(flow => flow.declaration).join(', ')}'.`,
-          node: flows[0].declaration.node
+          position: flows[0].declaration.node.position
         });
+        context.nonRecoverable = true;
       }
     });
 }

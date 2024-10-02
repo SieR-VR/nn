@@ -2,7 +2,7 @@ import { CancellationToken, Hover, TextDocumentPositionParams } from "vscode-lan
 import { LspContext } from "../types";
 
 import {
-  parse,
+  SourceFile,
   nodeOnPosition,
 } from 'nn-language'
 
@@ -20,18 +20,13 @@ export async function hover(params: TextDocumentPositionParams, context: LspCont
     return null;
   }
 
-  const parseResult = parse(document.getText());
-  if (parseResult.is_err()) {
-    return null;
-  }
+  const source = SourceFile.parse(document.getText());
 
-  const declarations = parseResult.unwrap();
-
-  const checkContext = TypeChecker.check(declarations, params.textDocument.uri);
+  const checkContext = TypeChecker.check(source.tree, params.textDocument.uri);
   const hoverPosition = document.offsetAt(params.position);
 
   const node = nodeOnPosition(
-    declarations,
+    source.tree,
     hoverPosition,
     (node) => checkContext.vertices.has(node)
   );

@@ -2,7 +2,7 @@ import { Diagnostic } from "vscode-languageserver/node";
 import { URI } from "vscode-uri";
 
 import {
-  parse,
+  SourceFile,
   travel,
   isDeclaration,
 } from 'nn-language'
@@ -24,54 +24,28 @@ export async function validateTextDocument(textDocumentUri: URI, context: LspCon
     return;
   }
 
-  const parseResult = parse(textDocument.getText());
+  const source = SourceFile.parse(textDocument.getText());
+  const checkContext = TypeChecker.check(source.tree, textDocument.uri);
+
   const diagnostics: Diagnostic[] = [];
 
-  if (parseResult.is_err()) {
-    const [diagnostic] = parseResult.unwrap_err();
+  [...source.diagnostics, ...checkContext.diagnostics]
+    .forEach(diagnostic => {
+      const startPos = textDocument.positionAt(diagnostic.position.pos);
+      const endPos = textDocument.positionAt(diagnostic.position.end);
 
-    const startPos = textDocument.positionAt(diagnostic.position.pos);
-    const endPos = textDocument.positionAt(diagnostic.position.end);
-
-    diagnostics.push({
-      range: {
-        start: startPos,
-        end: endPos,
-      },
-      severity: 1,
-      message: diagnostic.message,
-      source: 'nn-language-server',
+      diagnostics.push({
+        range: {
+          start: startPos,
+          end: endPos,
+        },
+        severity: 1,
+        message: diagnostic.message,
+        source: 'nn-language-server',
+      });
     });
 
-    context.client.sendDiagnostics({
-      uri: textDocument.uri,
-      diagnostics,
-    });
 
-    return;
-  }
-
-  const ast = parseResult.unwrap();
-  const declarations = travel(ast, isDeclaration);
-
-  const checkContext = TypeChecker.check(declarations, textDocument.uri);
-
-  checkContext.diagnostics.forEach(diagnostic => {
-    const { position } = diagnostic.node;
-    const startPos = textDocument.positionAt(position.pos);
-    const endPos = textDocument.positionAt(position.end);
-
-    diagnostics.push({
-      range: {
-        start: startPos,
-        end: endPos,
-      },
-      severity: 1,
-      message: diagnostic.message,
-      source: 'nn-language-server',
-    });
-  });
-  
   context.client.sendDiagnostics({
     uri: textDocument.uri,
     diagnostics,

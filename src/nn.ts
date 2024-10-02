@@ -3,7 +3,7 @@ import * as path from "path";
 
 import { Command } from "commander";
 
-import { parse } from "nn-language";
+import { SourceFile } from "nn-language";
 import { TypeChecker } from "nn-type-checker";
 
 import { synth } from "./synth" 
@@ -19,30 +19,48 @@ const opts = program.opts();
 const file = path.resolve(opts.file);
 
 const content = fs.readFileSync(file, 'utf-8');
-const parsed = parse(content);
 
-if (parsed.is_err()) {
+const source = SourceFile.parse(content);
+const checkContext = TypeChecker.check(source.tree, file);
+
+const diagnostics = [
+  ...source.diagnostics,
+  ...checkContext.diagnostics,
+]
+
+if (diagnostics.length) {
   const lines = content
     .split("\n")
 
-  parsed.unwrap_err().forEach((e) => {
-    const [line, pos] = (() => {
+  diagnostics.forEach(({ message, position }) => {
+    const [diagnosticLine, diagnosticPos] = (() => {
       let pos = 0;
 
       const line = lines.findIndex((l) => {
         pos += l.length + 1;
-        return pos >= e.position.pos;
+        return pos >= position.pos;
       });
       
-      return [line, e.position.pos + pos - lines[line].length];
+      return [line, position.pos - pos + lines[line].length + 1];
     })();
 
-    const errorLine = ' '.repeat(pos) + '^'.repeat(e.position.end - e.position.pos);
+    const maxLength = String(lines.length).length;
+    const errorLine = ' '.repeat(diagnosticPos + maxLength) + '^'.repeat(position.end - position.pos);
 
-    lines.forEach((l, i) => {
-      console.log(`${i + 1} | ${l}`);
+    const getLinePad = (i: number) => {
+      return ' '.repeat(maxLength - String(i).length);
+    }
 
-      if (i === line) {
+    const lower = Math.max(0, diagnosticLine - 2);
+    const upper = Math.min(lines.length, diagnosticLine + 2);
+
+    const contextLines = lines.slice(lower, upper);
+
+    contextLines.forEach((l, i) => {
+      const line = lower + i;
+      console.log(`${line + 1}${getLinePad(line + 1)} | ${l}`);
+
+      if (line === diagnosticLine) {
         const pad = ' '.repeat(String(i + 1).length + 2);
 
         console.log(`${pad}${errorLine}`);
@@ -50,53 +68,14 @@ if (parsed.is_err()) {
     })
 
     console.error(`
-Unexpected ${e.message}. ${opts.file}:${line + 1}:${pos + 1}
+> ${message} ${opts.file}:${diagnosticLine + 1}:${diagnosticPos + 1}
     `);
   });
 
   exit(1);
 }
 
-const ast = parsed.unwrap();
-const checker = TypeChecker.check(ast, file);
-
-if (checker.diagnostics.length) {
-  const lines = content
-    .split("\n")
-
-  checker.diagnostics.forEach(({ message, node: e }) => {
-    const [line, pos] = (() => {
-      let pos = 0;
-
-      const line = lines.findIndex((l) => {
-        pos += l.length + 1;
-        return pos >= e.position.pos;
-      });
-      
-      return [line, e.position.pos - pos + lines[line].length + 2];
-    })();
-
-    const errorLine = ' '.repeat(pos) + '^'.repeat(e.position.end - e.position.pos);
-
-    lines.forEach((l, i) => {
-      console.log(`${i + 1} | ${l}`);
-
-      if (i === line) {
-        const pad = ' '.repeat(String(i + 1).length + 2);
-
-        console.log(`${pad}${errorLine}`);
-      }
-    })
-
-    console.error(`
-${message} ${opts.file}:${line + 1}:${pos + 1}
-    `);
-  });
-
-  exit(1);
-}
-
-const python = ast.map((decl) => {
+const python = source.tree.map((decl) => {
   return synth.py`from tinygrad import Tensor
   
 class ${decl.name.value}:

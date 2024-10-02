@@ -1,4 +1,4 @@
-import { Declaration, Node } from 'nn-language';
+import { Declaration, Node, Diagnostic } from 'nn-language';
 import { checker, Type, Vertex } from './checker';
 import { FileScope, Flow, resolve } from './resolver';
 
@@ -7,11 +7,6 @@ import { Result, Ok, Err } from 'ts-features';
 
 export * from './resolver'
 export * from './checker'
-
-export interface Diagnostic {
-  message: string;
-  node: Node;
-}
 
 export interface TypeChecker {
   path: string;
@@ -22,6 +17,7 @@ export interface TypeChecker {
   vertices: Map<Node, Vertex>;
 
   diagnostics: Diagnostic[];
+  nonRecoverable: boolean;
 }
 
 export namespace TypeChecker {
@@ -40,12 +36,16 @@ export namespace TypeChecker {
       globalFlows: libs.flows,
       vertices: libs.vertices,
       
-      diagnostics: []
+      diagnostics: [],
+      nonRecoverable: false,
     }
 
     resolve(syntaxTree, path, context as TypeChecker);
-    checker(context as TypeChecker);
+    if (context.nonRecoverable) {
+      return context as TypeChecker;
+    }
 
+    checker(context as TypeChecker);
     return context as TypeChecker;
   }
 

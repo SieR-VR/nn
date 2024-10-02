@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import { parse } from 'nn-language';
+import { SourceFile } from 'nn-language';
 import { getErrorJson } from "../utils";
 
 const file = fs.readdirSync(path.join(__dirname, 'cases'));
@@ -16,13 +16,9 @@ describe("parser", () => {
   passes.forEach((file) => {
     it(`should parse ${file}`, async () => {
       const parserInput = fs.readFileSync(path.join(__dirname, 'cases', file), 'utf8');
-      const ast = parse(parserInput);
+      const source = SourceFile.parse(parserInput);
 
-      expect(ast.isOk).toBe(true);
-
-      if (ast.is_err()) {
-        console.log(ast.err, `at ${file}`);
-      }
+      expect(source.diagnostics.length).toBe(0);
     });
   });
 
@@ -31,9 +27,10 @@ describe("parser", () => {
       const parserInput = fs.readFileSync(path.join(__dirname, 'cases', file), 'utf8');
       const errorJson = getErrorJson(__dirname, file);
 
-      const ast = parse(parserInput);
+      const source = SourceFile.parse(parserInput);
 
-      expect(ast.isOk).toBe(false);
+      expect(source.diagnostics.length).toBeGreaterThan(0);
+      expect(source.diagnostics).toStrictEqual(errorJson);  
     });
   });
 });

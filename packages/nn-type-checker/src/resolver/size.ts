@@ -71,10 +71,13 @@ export namespace Size {
       .forEach(sizeNode =>
         find(scope, sizeNode.ident!)
           .map_or_else<unknown>(
-            () => context.diagnostics.push({
-              message: `Using undeclared size name '${sizeNode.ident!.value}'.`,
-              node: sizeNode
-            }),
+            () => {
+              context.diagnostics.push({
+                message: `Using undeclared size name '${sizeNode.ident!.value}'.`,
+                position: sizeNode.position
+              })
+              context.nonRecoverable = true;
+            },
             (size) => size.nodes.add(sizeNode)
           )
       );
