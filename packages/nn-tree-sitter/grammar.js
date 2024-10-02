@@ -5,11 +5,11 @@ module.exports = grammar({
   rules: {
     source_file: $ => repeat($.declaration),
     declaration: $ => seq(
-      $.ident, 
-      optional($.size_decls), 
-      $.arguments, 
+      field('name', $.ident), 
+      field('sizeDeclList', optional($.size_decls)), 
+      field('argumentList', $.arguments), 
       "=",
-      optional("|>"), 
+      field('firstPipe', optional("|>")), 
       $.expression, 
       repeat(seq("|>", $.expression))
     ),
