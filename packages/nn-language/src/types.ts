@@ -5,5 +5,6 @@ export interface Position {
 
 export interface Diagnostic {
   message: string
+
   position: Position
 }

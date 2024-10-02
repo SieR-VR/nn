@@ -1,31 +1,67 @@
 import Parser from "tree-sitter";
-import { Result, Ok, Err } from "ts-features";
-
-import { parser } from "./treesitter";
 
 import { Declaration } from "./ast";
 import { Diagnostic } from "./types";
 import { toPosition } from "./utils";
+import { parser } from "./treesitter";
 import { convertDeclaration } from "./convert";
 
-export function parse(input: string, oldTree?: Parser.Tree): Result<Declaration[], Diagnostic[]> {
-  const parse = parser.parse(input, oldTree);
-  
-  if (parse.rootNode.hasError) {
-    const errors = parse.rootNode.descendantsOfType("ERROR");
+export interface SourceFile {
+  path?: string;
+  content: string;
 
-    return Err(errors.map((e) => ({
-      message: e.text,
-      position: toPosition(e),
-    })));
+  oldTree: Parser.Tree;
+  tree: Declaration[];
+
+  diagnostics: Diagnostic[];
+}
+
+export namespace SourceFile {
+  function getErrorNodes(root: Parser.SyntaxNode): Parser.SyntaxNode[] {
+    const travel = (node: Parser.SyntaxNode, acc: Parser.SyntaxNode[]): Parser.SyntaxNode[] => {
+      if (node.isError) {
+        acc.push(node);
+        return acc;
+      }
+
+      for (const child of node.children) {
+        travel(child, acc);
+      }
+
+      return acc;
+    }
+
+    return travel(root, []);
   }
 
-  const ast = parse.rootNode.children
-    .filter((node) => node.type === "declaration")
-    .map(convertDeclaration)
-    
-  return Ok(ast);
+  function getMessageForErrorNode(node: Parser.SyntaxNode): string {
+    const child = node.child(0)
+
+    if (child && child.type !== "ERROR") {
+      return `Unexpected ${child.type}.`;
+    } else {
+      return `Unexpected token '${node.text}'.`;
+    } 
+  }
+
+  export function parse(content: string, path?: string, old?: SourceFile): SourceFile {
+    const parse = parser.parse(content, old?.oldTree);
+    const result = old ?? { content, path, oldTree: parse, tree: [], diagnostics: [] };
+
+    result.diagnostics = getErrorNodes(parse.rootNode)
+      .map((node) => ({
+        message: getMessageForErrorNode(node),
+        position: toPosition(node),
+      }));
+
+    result.tree = parse.rootNode.children
+      .filter((node) => node.type === "declaration")
+      .map((declNode) => convertDeclaration(declNode, result));
+
+    return result;
+  }
 }
 
 export { travel, nodeOnPosition } from "./utils";
+export * from "./types";
 export * from "./ast";
