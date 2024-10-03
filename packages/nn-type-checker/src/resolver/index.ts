@@ -1,4 +1,4 @@
-import { Declaration } from "nn-language";
+import { SourceFile } from "nn-language";
 
 import { Scope } from "./scope";
 import { Value, Size, Flow, TypeChecker } from "..";
@@ -10,11 +10,11 @@ import { Value, Size, Flow, TypeChecker } from "..";
  * @param path the path of the file
  * @param context the context of the checker
  */
-export function resolve(source: Declaration[], path: string, context: TypeChecker): void {
-  context.scope = Scope.makeFile(path);
+export function resolve(source: SourceFile, context: TypeChecker): void {
+  context.scope = Scope.makeFile(source.path);
   context.scope.flows = { ...context.globalFlows };
 
-  source.forEach(decl => {
+  source.tree.forEach(decl => {
     const scope = Scope.makeDeclaration(context.scope, decl);
     const flow = Flow.make(scope);
 

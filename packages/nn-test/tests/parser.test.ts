@@ -16,7 +16,7 @@ describe("parser", () => {
   ok.forEach((file) => {
     it(`should parse ${file}`, async () => {
       const parserInput = fs.readFileSync(path.join(__dirname, 'cases', file), 'utf8');
-      const source = SourceFile.parse(parserInput);
+      const source = SourceFile.parse(parserInput, file);
 
       expect(source.diagnostics.length).toBe(0);
     });
@@ -27,7 +27,7 @@ describe("parser", () => {
       const parserInput = fs.readFileSync(path.join(__dirname, 'cases', file), 'utf8');
       const errorJson = getErrorJson(__dirname, file);
 
-      const source = SourceFile.parse(parserInput);
+      const source = SourceFile.parse(parserInput, file);
 
       expect(source.diagnostics.length).toBeGreaterThan(0);
       expect(source.diagnostics).toStrictEqual(errorJson);  

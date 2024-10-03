@@ -12,8 +12,8 @@ describe("checker", () => {
     it(`should type check ${file}`, async () => {
       const parserInput = fs.readFileSync(path.join(__dirname, 'cases', file), 'utf8');
 
-      const source = SourceFile.parse(parserInput);
-      expect(() => TypeChecker.check(source.tree, file))
+      const source = SourceFile.parse(parserInput, file);
+      expect(() => TypeChecker.check(source))
         .not.toThrow();
     });
   });

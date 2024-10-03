@@ -1,4 +1,4 @@
-import { Declaration, Node, Diagnostic } from 'nn-language';
+import { Node, Diagnostic, SourceFile } from 'nn-language';
 import { checker, Type, Vertex } from './checker';
 import { FileScope, Flow, resolve } from './resolver';
 
@@ -25,13 +25,14 @@ export namespace TypeChecker {
   /**
    * Check the syntax tree and return the type checker object
    * 
-   * @param syntaxTree the target syntax tree to check
-   * @param path the path of the file
+   * @param source the source file object to check
    * @returns the type checker object
    */
-  export function check(syntaxTree: Declaration[], path: string): TypeChecker {
-    const context: Partial<TypeChecker> = { 
-      path,
+  export function check(source: SourceFile): TypeChecker {
+    const context: TypeChecker = { 
+      path: source.path,
+
+      scope: {} as FileScope,
       
       globalFlows: libs.flows,
       vertices: libs.vertices,
@@ -40,13 +41,13 @@ export namespace TypeChecker {
       nonRecoverable: false,
     }
 
-    resolve(syntaxTree, path, context as TypeChecker);
+    resolve(source, context);
     if (context.nonRecoverable) {
-      return context as TypeChecker;
+      return context;
     }
 
-    checker(context as TypeChecker);
-    return context as TypeChecker;
+    checker(context);
+    return context;
   }
 
   export enum GetTypeError {

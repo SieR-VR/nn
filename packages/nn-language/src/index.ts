@@ -7,7 +7,7 @@ import { parser } from "./treesitter";
 import { convertDeclaration } from "./convert";
 
 export interface SourceFile {
-  path?: string;
+  path: string;
   content: string;
 
   oldTree: Parser.Tree;
@@ -44,7 +44,7 @@ export namespace SourceFile {
     } 
   }
 
-  export function parse(content: string, path?: string, old?: SourceFile): SourceFile {
+  export function parse(content: string, path: string, old?: SourceFile): SourceFile {
     const parse = parser.parse(content, old?.oldTree);
     const result = old ?? { content, path, oldTree: parse, tree: [], diagnostics: [] };
 
