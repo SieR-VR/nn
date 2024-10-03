@@ -24,8 +24,8 @@ export async function validateTextDocument(textDocumentUri: URI, context: LspCon
     return;
   }
 
-  const source = SourceFile.parse(textDocument.getText());
-  const checkContext = TypeChecker.check(source.tree, textDocument.uri);
+  const source = SourceFile.parse(textDocument.getText(), textDocument.uri);
+  const checkContext = TypeChecker.check(source);
 
   const diagnostics: Diagnostic[] = [];
 

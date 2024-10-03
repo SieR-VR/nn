@@ -1,7 +1,8 @@
+import { None, Option, Some } from "ts-features";
 import { CallExpression, isCallExpression, isStringLiteralExpression, isTupleExpression, travel } from "nn-language";
+
 import { DeclarationScope, Flow, Size } from "../resolver";
 import { TypeChecker, SizeType, Vertex, Type } from "..";
-import { None, Option, Some } from "ts-features";
 
 export interface Edge {
   args: Vertex[];

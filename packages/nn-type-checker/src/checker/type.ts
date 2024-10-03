@@ -1,8 +1,8 @@
+import { None, Option, Some } from "ts-features";
 import { CallExpression, TypeNode } from "nn-language";
 
 import { DeclarationScope, Size } from "../resolver";
 import { SizeType } from "./sizetype";
-import { None, Option, Some } from "ts-features";
 
 export interface Type {
   type: 'Tensor';

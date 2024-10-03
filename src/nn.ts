@@ -20,8 +20,8 @@ const file = path.resolve(opts.file);
 
 const content = fs.readFileSync(file, 'utf-8');
 
-const source = SourceFile.parse(content);
-const checkContext = TypeChecker.check(source.tree, file);
+const source = SourceFile.parse(content, file);
+const checkContext = TypeChecker.check(source);
 
 const diagnostics = [
   ...source.diagnostics,

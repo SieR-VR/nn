@@ -20,9 +20,9 @@ export async function hover(params: TextDocumentPositionParams, context: LspCont
     return null;
   }
 
-  const source = SourceFile.parse(document.getText());
+  const source = SourceFile.parse(document.getText(), params.textDocument.uri);
 
-  const checkContext = TypeChecker.check(source.tree, params.textDocument.uri);
+  const checkContext = TypeChecker.check(source);
   const hoverPosition = document.offsetAt(params.position);
 
   const node = nodeOnPosition(

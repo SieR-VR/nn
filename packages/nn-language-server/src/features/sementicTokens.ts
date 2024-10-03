@@ -16,7 +16,7 @@ export function semanticTokens(params: DocumentSymbolParams, context: LspContext
     return builder.build();
   }
 
-  const source = SourceFile.parse(document.getText());
+  const source = SourceFile.parse(document.getText(), params.textDocument.uri);
   const callExpressions = travel(source.tree, isCallExpression);
 
   for (const decl of source.tree) {
