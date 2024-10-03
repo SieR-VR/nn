@@ -1,27 +1,45 @@
 import { inspect } from "util";
 
-import { parse } from "nn-language";
-import { check } from "nn-type-checker";
+import { SourceFile } from "nn-language";
+import { TypeChecker } from "nn-type-checker";
 
 const source = `
-Linear[input, output](x: Tensor[input]) = 
-  x, Trainable[input, output]('weight')
-  |> MatMul(), Trainable[output]('bias')
-  |> Bias()
+ConvBlock[Channel](x: Tensor[H, W, C]) =
+  |> Conv2D[3, 1, 1, Channel]()
+  |> BatchNorm()
+  |> ReLU()
+  |> Conv2D[3, 1, 1, Channel]()
+  |> BatchNorm()
+  |> ReLU()
 
-Circular1[input, output](x: Tensor[input]) =
-  Circular2[input, output](x)
+UNetEncoder[Channel, Pool](x: Tensor[H, W, C]) =
+  |> ConvBlock[Channel]()
+  |> MaxPool[Pool]()
 
-Circular2[input, output](x: Tensor[input]) =
-  Circular3[input, output](x)
+UNetDecoder[Channel](x: Tensor[H, W, C], skip: Tensor[H, W, C]) =
+  x
+  |> Conv2DTransposed[3, 1, 1, Channel]()
+  |> Concat(skip)
+  |> ConvBlock[Channel]()
 
-Circular3[input, output](x: Tensor[input]) =
-  Circular1[input, output](x)
+UNet[Channel](x: Tensor[H, W, C]) =
+  |> UNetEncoder[Channel]()
+  |> UNetEncoder[Channel * 2]()
+  |> UNetEncoder[Channel * 4]()
+  |> UNetEncoder[Channel * 8]()
+  
+  |> ConvBlock[Channel * 8]()
+
+  |> UNetDecoder[Channel * 8](s4)
+  |> UNetDecoder[Channel * 4](s3)
+  |> UNetDecoder[Channel * 2](s2)
+  |> UNetDecoder[Channel](s1)
 `
 
-const result = parse(source)
-const declarations = result.unwrap()
+const result = SourceFile.parse(source, 'Linear.nn')
+const context = TypeChecker.check(result)
 
-const context = check(declarations, "src/Linear.nn")
-
-console.log(inspect(context, { depth: 3 }))
+console.log(inspect(
+  context,
+  { depth: 3 }
+))
