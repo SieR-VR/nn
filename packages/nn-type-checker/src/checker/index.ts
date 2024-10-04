@@ -1,7 +1,7 @@
 import { Vertex } from "./vertex";
 import { Edge } from "./edge";
 
-import { TypeChecker } from "..";
+import { Type, TypeChecker } from "..";
 
 export function checker(context: TypeChecker) {
   const edges: Edge[] = [];
@@ -20,6 +20,27 @@ export function checker(context: TypeChecker) {
     lastPassedCount = passedCount;
     passedCount = edges.filter(edge => edge.passed === true).length;
   }
+
+  Object.values(context.scope.declarations)
+    .forEach(({ flow }) => {
+      if (!flow) return;
+
+      if (flow.returnType) {
+        const left = Type.from(flow.returnType, flow.declaration);
+        const right = context.vertices.get(flow.return!)!.type;
+  
+        if (right.is_none()) {
+          return;
+        }
+  
+        if (!Type.isSame(left, right.unwrap())) {
+          context.diagnostics.push({
+            message: `Return type mismatch: ${Type.toString(left)} != ${Type.toString(right.unwrap())}.`,
+            position: flow.return!.position
+          });
+        }
+      }
+    });
 }
 
 export * from './vertex';

@@ -62,6 +62,7 @@ export function convertDeclaration(node: Parser.SyntaxNode, context: SourceFile)
     name: convertIdentifier(node.childForFieldName('name'), context),
     sizeDeclList: convertSizeDeclList(node.childForFieldName('sizeDeclList'), context),
     argumentList: convertArgumentList(node.childForFieldName('argumentList'), context),
+    returnType: convertTypeNode(node.childForFieldName('returnType'), context),
 
     firstPipe: node.childForFieldName('firstPipe') !== null,
     exprs: node.namedChildren

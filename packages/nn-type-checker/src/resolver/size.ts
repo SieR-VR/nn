@@ -66,6 +66,22 @@ export namespace Size {
           )
       );
 
+    scope.node.returnType && travel(scope.node, isSizeNode)
+      .filter(size => size.sizeType === "ident")
+      .forEach(sizeNode =>
+        find(scope, sizeNode.ident!)
+          .map_or_else<unknown>(
+            () => {
+              context.diagnostics.push({
+                message: `Using undeclared size name '${sizeNode.ident!.value}'.`,
+                position: sizeNode.position
+              })
+              context.nonRecoverable = true;
+            },
+            (size) => size.nodes.add(sizeNode)
+          )
+      );
+
     travel(scope.node.exprs, isSizeNode)
       .filter(ident => ident.sizeType === "ident")
       .forEach(sizeNode =>

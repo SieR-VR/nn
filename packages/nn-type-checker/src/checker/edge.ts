@@ -14,10 +14,7 @@ export interface Edge {
   passed?: boolean;
 }
 
-/**
- * internal
- */
-interface Callee {
+export interface Callee {
   sizes: Size[];
   args: Vertex[];
   return: Vertex;
@@ -25,21 +22,21 @@ interface Callee {
 }
 
 export namespace Edge {
-  const _calleeMap = new Map<Flow, Callee>();
-
   function _getCallee(flow: Flow, context: TypeChecker): Callee {
-    if (_calleeMap.has(flow)) {
-      return _calleeMap.get(flow)!;
+    if (context._internal.calleeMap.has(flow)) {
+      return context._internal.calleeMap.get(flow)!;
     }
 
     const callee = {
       sizes: flow.sizes,
       args: flow.args.map(arg => context.vertices.get(arg.first)!),
-      return: context.vertices.get(flow.return!)!,
+      return: flow.returnType
+        ? Vertex.from(flow.declaration.node, Some(Type.from(flow.returnType, flow.declaration)))
+        : context.vertices.get(flow.return!)!,
       flow,
     }
 
-    _calleeMap.set(flow, callee);
+    context._internal.calleeMap.set(flow, callee);
     return callee;
   }
 

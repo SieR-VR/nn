@@ -29,6 +29,7 @@ export interface Declaration extends Node {
   argumentList: ArgumentList
   firstPipe: boolean
   exprs: Expression[]
+  returnType?: TypeNode
 
   type: "Declaration"
 }

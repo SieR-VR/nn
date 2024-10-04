@@ -1,5 +1,5 @@
 import { None, Option, Some } from "ts-features";
-import { Expression, Identifier, isCallExpression, travel } from "nn-language";
+import { Expression, Identifier, isCallExpression, travel, TypeNode } from "nn-language";
 
 import { DeclarationScope, FileScope } from "./scope";
 import { Size, TypeChecker, Value } from "..";
@@ -11,6 +11,7 @@ export interface Flow {
   sizes: Size[];
   args: Value[];
   return?: Expression | Identifier;
+  returnType?: TypeNode;
 }
 
 export namespace Flow {
@@ -47,6 +48,7 @@ export namespace Flow {
       : [];
     flow.args = scope.node.argumentList.args.map(arg => scope.values[arg.ident.value]);
     flow.return = scope.node.exprs.at(-1);
+    flow.returnType = scope.node.returnType;
   }
 
   function _resolveCallInternal(scope: DeclarationScope, context: TypeChecker): void {

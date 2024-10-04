@@ -1,9 +1,11 @@
+import { Result, Ok, Err } from 'ts-features';
 import { Node, Diagnostic, SourceFile } from 'nn-language';
+
 import { checker, Type, Vertex } from './checker';
 import { FileScope, Flow, resolve } from './resolver';
 
 import { libs } from './lib';
-import { Result, Ok, Err } from 'ts-features';
+import { Callee } from './checker/edge';
 
 export * from './resolver'
 export * from './checker'
@@ -18,6 +20,10 @@ export interface TypeChecker {
 
   diagnostics: Diagnostic[];
   nonRecoverable: boolean;
+
+  _internal: {
+    calleeMap: Map<Flow, Callee>;
+  }
 }
 
 export namespace TypeChecker {
@@ -39,6 +45,10 @@ export namespace TypeChecker {
       
       diagnostics: [],
       nonRecoverable: false,
+
+      _internal: {
+        calleeMap: new Map(),
+      }
     }
 
     resolve(source, context);

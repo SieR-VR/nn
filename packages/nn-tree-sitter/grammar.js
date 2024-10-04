@@ -8,6 +8,7 @@ module.exports = grammar({
       field('name', $.ident), 
       field('sizeDeclList', optional($.size_decls)), 
       field('argumentList', $.arguments), 
+      optional(seq(':', field('returnType', $.type))),
       "=",
       field('firstPipe', optional("|>")), 
       $.expression, 
