@@ -1,5 +1,5 @@
 import { match_string } from "ts-features"
-import { ArgumentList, CallExpression, Declaration, Expression, Identifier, IdentifierExpression, isCallExpression, Node, SizeDeclList, SizeNode, StringLiteralExpression, travel, TupleExpression, TypeNode } from "nn-language"
+import { ArgumentList, AssignmentExpression, CallExpression, Declaration, Expression, Identifier, IdentifierExpression, isCallExpression, Node, SizeDeclList, SizeNode, StringLiteralExpression, travel, TupleExpression, TypeNode } from "nn-language"
 
 const opsMap: Record<string, { tensorOp: boolean, target: string }> = {
   "MatMul": {
@@ -123,6 +123,11 @@ const pyforward = (decl: Declaration, indent: number = 4) => {
         }
 
       },
+      AssignmentExpression: () => {
+        const { left, right } = expr as AssignmentExpression
+
+        return `${left.value} = ${toPythonExpression(right)}`
+      },
       IdentifierExpression: () => {
         return (expr as IdentifierExpression).ident.value
       },
@@ -148,6 +153,14 @@ const pyforward = (decl: Declaration, indent: number = 4) => {
         return [
           `${(expr as IdentifierExpression).ident}`,
           [`${(expr as IdentifierExpression).ident}`]
+        ]
+      },
+      AssignmentExpression: () => {
+        const { left, right } = expr as AssignmentExpression
+
+        return [
+          `${left.value} = ${toPythonExpression(right)}`,
+          [left.value]
         ]
       },
       StringLiteralExpression: () => {

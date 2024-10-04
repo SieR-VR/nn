@@ -33,18 +33,6 @@ export interface Declaration extends Node {
   type: "Declaration"
 }
 
-export interface IdentifierExpression extends Node {
-  ident: Identifier
-
-  type: "IdentifierExpression"
-}
-
-export interface TupleExpression extends Node {
-  elements: Expression[]
-
-  type: "TupleExpression"
-}
-
 export interface CallExpression extends Node {
   callee: Identifier
   sizes?: SizeNode[]
@@ -53,13 +41,37 @@ export interface CallExpression extends Node {
   type: "CallExpression"
 }
 
+export interface TupleExpression extends Node {
+  elements: Expression[]
+
+  type: "TupleExpression"
+}
+
+export interface AssignmentExpression extends Node {
+  left: Identifier
+  right: Expression
+
+  type: "AssignmentExpression"
+}
+
+export interface IdentifierExpression extends Node {
+  ident: Identifier
+
+  type: "IdentifierExpression"
+}
+
 export interface StringLiteralExpression extends Node {
   value: string
 
   type: "StringLiteralExpression"
 }
 
-export type Expression = IdentifierExpression | CallExpression | TupleExpression | StringLiteralExpression
+export type Expression = 
+  | CallExpression 
+  | TupleExpression
+  | AssignmentExpression 
+  | IdentifierExpression 
+  | StringLiteralExpression
 
 export interface SizeNode extends Node {
   left?: SizeNode
@@ -94,6 +106,7 @@ export function isArgumentList(node: Node): node is ArgumentList {
 export function isExpression(node: Node): node is Expression {
   return node.type === "IdentifierExpression"
     || node.type === "CallExpression"
+    || node.type === "AssignmentExpression"
     || node.type === "TupleExpression"
     || node.type === "StringLiteralExpression"
 }
@@ -108,6 +121,10 @@ export function isCallExpression(node: Node): node is CallExpression {
 
 export function isTupleExpression(node: Node): node is TupleExpression {
   return node.type === "TupleExpression"
+}
+
+export function isAssignmentExpression(node: Node): node is AssignmentExpression {
+  return node.type === "AssignmentExpression"
 }
 
 export function isStringLiteralExpression(node: Node): node is StringLiteralExpression {

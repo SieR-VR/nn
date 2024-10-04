@@ -17,10 +17,10 @@ UNetDecoder[Channel](x: Tensor[H, W, C], skip: Tensor[H, W, C]) =
   |> ConvBlock[Channel]()
 
 UNet[Channel](x: Tensor[H, W, C]) =
-  |> UNetEncoder[Channel]()
-  |> UNetEncoder[Channel * 2]()
-  |> UNetEncoder[Channel * 4]()
-  |> UNetEncoder[Channel * 8]()
+  |> s1 = UNetEncoder[Channel]()
+  |> s2 = UNetEncoder[Channel * 2]()
+  |> s3 = UNetEncoder[Channel * 4]()
+  |> s4 = UNetEncoder[Channel * 8]()
   
   |> ConvBlock[Channel * 8]()
 

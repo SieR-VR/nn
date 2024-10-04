@@ -18,8 +18,9 @@ module.exports = grammar({
     argument_decl: $ => seq($.ident, ":", $.type),
 
     expression: $ => choice(
-      $.expression_tuple,
       $.expression_call,
+      $.expression_tuple,
+      $.expression_assign,
       $.expression_ident,
       $.expression_string,
     ),
@@ -30,6 +31,7 @@ module.exports = grammar({
     ),
     expression_call: $ => prec(20, seq($.ident, optional($.size_type), "(", optional(seq($.expression_plain, repeat(seq(",", $.expression_plain)), optional(","))), ")")),
     expression_tuple: $ => prec(10, seq($.expression_plain, repeat1(seq(",", $.expression_plain)))),
+    expression_assign: $ => prec.right(5, seq($.ident, "=", $.expression_plain)),
     expression_ident: $ => prec(0, $.ident),
     expression_string: $ => $.string,
 

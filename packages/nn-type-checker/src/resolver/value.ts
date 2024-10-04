@@ -1,5 +1,5 @@
 import { None, Option, Some } from "ts-features";
-import { Node, Identifier, isIdentifierExpression, travel } from "nn-language";
+import { Node, Identifier, isIdentifierExpression, travel, isAssignmentExpression } from "nn-language";
 
 import { DeclarationScope } from "./scope";
 import { TypeChecker } from "..";
@@ -56,6 +56,21 @@ export namespace Value {
         scope.values[arg.ident.value] = make(scope, arg.ident)
       );
 
+    travel(scope.node.exprs, isAssignmentExpression)
+      .forEach(assignmentExpr => {
+        scope.values[assignmentExpr.left.value] = make(scope, assignmentExpr.left);
+
+        travel(assignmentExpr.right, isIdentifierExpression)
+          .filter(identExpr => identExpr.ident.value === assignmentExpr.left.value)
+          .forEach(identExpr => {
+            context.diagnostics.push({
+              message: `Using undeclared value name '${identExpr.ident.value}'.`,
+              position: identExpr.ident.position
+            });
+            context.nonRecoverable = true;
+          });
+      })
+
     travel(scope.node.exprs, isIdentifierExpression)
       .forEach(identExpr =>
         find(scope, identExpr.ident)
@@ -64,10 +79,20 @@ export namespace Value {
               context.diagnostics.push({
                 message: `Using undeclared value name '${identExpr.ident.value}'.`,
                 position: identExpr.ident.position
-              })
+              });
               context.nonRecoverable = true;
             },
-            value => value.nodes.add(identExpr.ident)
+            (value) => {
+              if (value.first.position.pos < identExpr.ident.position.pos) {
+                value.nodes.add(identExpr.ident)
+              } else {
+                context.diagnostics.push({
+                  message: `Using undeclared value name '${identExpr.ident.value}'.`,
+                  position: identExpr.ident.position
+                });
+                context.nonRecoverable = true;
+              }
+            }
           )
       );
   }

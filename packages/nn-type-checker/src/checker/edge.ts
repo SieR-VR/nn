@@ -1,5 +1,5 @@
 import { None, Option, Some } from "ts-features";
-import { CallExpression, isCallExpression, isStringLiteralExpression, isTupleExpression, travel } from "nn-language";
+import { CallExpression, isAssignmentExpression, isCallExpression, isStringLiteralExpression, isTupleExpression, travel } from "nn-language";
 
 import { DeclarationScope, Flow, Size } from "../resolver";
 import { TypeChecker, SizeType, Vertex, Type } from "..";
@@ -66,9 +66,12 @@ export namespace Edge {
       : []
 
     declaration.exprs.forEach((expr, index) => {
-      const firstExpression = isTupleExpression(expr)
-        ? expr.elements[0]
-        : expr;
+      const firstExpression = 
+        isTupleExpression(expr) ?
+        expr.elements[0] :
+        isAssignmentExpression(expr) ?
+        expr.right :
+        expr;
 
       const callNeeded =
         (index !== 0) || (index === 0 && declaration.firstPipe)

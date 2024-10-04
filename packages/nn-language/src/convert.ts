@@ -1,6 +1,6 @@
 import Parser from "tree-sitter";
 
-import { ArgumentList, CallExpression, Declaration, Expression, Identifier, IdentifierExpression, Node, SizeDeclList, SizeNode, StringLiteralExpression, TupleExpression, TypeNode } from "./ast";
+import { ArgumentList, AssignmentExpression, CallExpression, Declaration, Expression, Identifier, IdentifierExpression, Node, SizeDeclList, SizeNode, StringLiteralExpression, TupleExpression, TypeNode } from "./ast";
 import { toPosition } from "./utils";
 import { SourceFile } from ".";
 
@@ -176,6 +176,19 @@ function convertTupleExpression(node: Parser.SyntaxNode | null, context: SourceF
   };
 }
 
+function convertAssignmentExpression(node: Parser.SyntaxNode | null, context: SourceFile): AssignmentExpression {
+  if (!node) {
+    throw new Error("Expected an assignment expression node");
+  }
+
+  return {
+    type: "AssignmentExpression",
+    left: convertIdentifier(node.child(0), context),
+    right: convertExpression(node.child(2), context),
+    position: toPosition(node),
+  };
+}
+
 function convertIdentExpression(node: Parser.SyntaxNode | null, context: SourceFile): IdentifierExpression {
   if (!node) {
     throw new Error("Expected an identifier expression node");
@@ -210,6 +223,8 @@ function convertExpression(node: Parser.SyntaxNode | null, context: SourceFile):
       return convertCallExpression(node, context);
     case "expression_tuple":
       return convertTupleExpression(node, context);
+    case "expression_assign":
+      return convertAssignmentExpression(node, context);
     case "expression_ident":
       return convertIdentExpression(node, context);
     case "expression_string":

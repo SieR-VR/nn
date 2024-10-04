@@ -1,5 +1,5 @@
 import { Option, Some, None } from "ts-features";
-import { isCallExpression, isIdentifierExpression, Node, travel } from "nn-language";
+import { isAssignmentExpression, isCallExpression, isIdentifierExpression, Node, travel } from "nn-language";
 
 import { Type } from "./type";
 import { DeclarationScope, Value } from "../resolver";
@@ -69,6 +69,15 @@ export namespace Vertex {
             type: None()
           });
         }
+      });
+
+    travel(scope.node, isAssignmentExpression)
+      .forEach(assignmentExpr => {
+        if (!vertices.has(assignmentExpr.right)) {
+          return;
+        }
+
+        vertices.set(assignmentExpr, vertices.get(assignmentExpr.right)!);
       });
   }
 }
