@@ -25,7 +25,7 @@ export function checker(context: TypeChecker) {
     .forEach(({ flow }) => {
       if (!flow) return;
 
-      if (flow.returnType) {
+      if (flow.returnType && flow.return) {
         const left = Type.from(flow.returnType, flow.declaration);
         const right = context.vertices.get(flow.return!)!.type;
   

@@ -9,10 +9,14 @@ module.exports = grammar({
       field('sizeDeclList', optional($.size_decls)), 
       field('argumentList', $.arguments), 
       optional(seq(':', field('returnType', $.type))),
-      "=",
-      field('firstPipe', optional("|>")), 
-      $.expression, 
-      repeat(seq("|>", $.expression))
+      optional(
+        field('expressions', seq( 
+          "=",
+          field('firstPipe', optional("|>")), 
+          field('expr_first', $.expression),
+          repeat(seq("|>", field('expr_last', $.expression)))
+        ))
+      ),
     ),
     size_decls: $ => seq("[", $.ident, repeat(seq(",", $.ident)), optional(","), "]"),
     arguments: $ => seq("(", $.argument_decl, repeat(seq(",", $.argument_decl)), optional(","), ")"),

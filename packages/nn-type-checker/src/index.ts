@@ -4,7 +4,6 @@ import { Node, Diagnostic, SourceFile } from 'nn-language';
 import { checker, Type, Vertex } from './checker';
 import { FileScope, Flow, resolve } from './resolver';
 
-import { libs } from './lib';
 import { Callee } from './checker/edge';
 
 export * from './resolver'
@@ -40,8 +39,8 @@ export namespace TypeChecker {
 
       scope: {} as FileScope,
       
-      globalFlows: libs.flows,
-      vertices: libs.vertices,
+      globalFlows: {},
+      vertices: new Map(),
       
       diagnostics: [],
       nonRecoverable: false,

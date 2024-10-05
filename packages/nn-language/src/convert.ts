@@ -67,9 +67,11 @@ export function convertDeclaration(node: Parser.SyntaxNode, context: SourceFile)
       : undefined,
 
     firstPipe: node.childForFieldName('firstPipe') !== null,
-    exprs: node.namedChildren
-      .filter((child) => child.type === "expression")
-      .map((child) => convertExpression(child, context)),
+    exprs:
+      node.childForFieldName('expressions') 
+        ? [node.childForFieldName('expr_first'), ...node.childrenForFieldName('expr_last')]
+            .map((child) => convertExpression(child, context))
+        : [],
 
     position: toPosition(node),
   };

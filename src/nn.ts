@@ -75,17 +75,20 @@ if (diagnostics.length) {
   exit(1);
 }
 
-const python = source.tree.map((decl) => {
-  return synth.py`from tinygrad import Tensor
-  
-class ${decl.name.value}:
+const python = 
+`from tinygrad import Tensor
+
+${source.tree
+  .filter(decl => decl.exprs.length)
+  .map((decl) => {
+  return synth.py`class ${decl.name.value}:
   def __init__(self, ${decl.sizeDeclList}):
     ${synth.py.inits(decl)}
     
   def __call__(self, ${decl.argumentList}):
     ${synth.py.forward(decl)}
-  `
-}).join("\n");
+`}).join("\n")}
+`
 
 const output = opts.output 
   || path.join(process.cwd(), path.basename(file.replace(/\.nn$/, '') + '.py'));

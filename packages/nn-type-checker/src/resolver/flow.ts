@@ -15,6 +15,7 @@ export interface Flow {
 }
 
 export namespace Flow {
+  const _builtin = ["Trainable"];
 
   /**
    * Creates a new flow object from a declaration scope.
@@ -62,7 +63,7 @@ export namespace Flow {
         } else if (callExpression.callee.value in scope.file.flows) {
           const callFlow = scope.file.flows[callExpression.callee.value];
           scope.flow!.calls.add(callFlow);
-        } else {
+        } else if (!_builtin.includes(callExpression.callee.value)) {
           context.diagnostics.push({
             message: `Using undeclared flow name '${callExpression.callee.value}'.`,
             position: callExpression.callee.position
