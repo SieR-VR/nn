@@ -28,14 +28,14 @@ export namespace Edge {
     }
 
     const callee = {
-      sizes: flow.sizes,
+      sizes: [...flow.sizes],
       args: flow.args.map(arg => context.vertices.get(arg.first)!),
       return: flow.returnType
         ? Vertex.from(flow.declaration.node, Some(Type.from(flow.returnType, flow.declaration)))
         : context.vertices.get(flow.return!)!,
       flow,
     }
-
+    
     context._internal.calleeMap.set(flow, callee);
     return callee;
   }
@@ -141,7 +141,9 @@ export namespace Edge {
         if (!SizeType.isSame(left[first], left[index])) {
           context.diagnostics.push({
             message: `Size mismatch: ${SizeType.toString(left[first])} != ${SizeType.toString(left[index])}.`,
-            position: edge.args[index].expression.position
+            position: left[index].node
+              ? left[index].node.position
+              : edge.toSolve.expression.position
           });
 
           failed = true;
@@ -162,7 +164,6 @@ export namespace Edge {
 
   export function solve(edge: Edge, context: TypeChecker): void {
     if (typeof edge.passed === "boolean") return;
-    if (edge.callee.return.type.is_none()) return;
 
     if (edge.callee.args.length !== edge.args.length) {
       context.diagnostics.push({
@@ -180,7 +181,7 @@ export namespace Edge {
 
     const [left, right] = (() => {
       if (edge.sizeArgs.length && edge.callee.sizes.length) {
-        return [edge.sizeArgs, edge.callee.sizes];
+        return [[...edge.sizeArgs], [...edge.callee.sizes]];
       }
 
       return [[], []];

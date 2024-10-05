@@ -69,17 +69,20 @@ export async function hover(params: TextDocumentPositionParams, context: LspCont
 }
 
 function sizeTypeToString(type: SizeType): string {
-  console.log('sizeTypeToString', type)
   const computeKindMap = {
-    'add': '+',
-    'mul': '*',
     'pow': '^',
+    'mul': '*',
+    'div': '/',
+    'add': '+',
+    'sub': '-',
   }
 
   switch (type.computeKind) {
-    case 'add':
-    case 'mul':
     case 'pow':
+    case 'mul':
+    case 'div':
+    case 'add':
+    case 'sub':
       return `(${sizeTypeToString(type.left as SizeType)} ${computeKindMap[type.computeKind]} ${sizeTypeToString(type.right!)})`;
     case 'ident':
       return (type.left as Size).ident

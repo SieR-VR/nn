@@ -116,12 +116,30 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
         type: "SizeNode",
         position: toPosition(node),
       };
+    case "size_div":
+      return {
+        left: convertSizeNode(node.child(0), context),
+        right: convertSizeNode(node.child(2), context),
+
+        sizeType: "div",
+        type: "SizeNode",
+        position: toPosition(node),
+      };
     case "size_add":
       return {
         left: convertSizeNode(node.child(0), context),
         right: convertSizeNode(node.child(2), context),
 
         sizeType: "add",
+        type: "SizeNode",
+        position: toPosition(node),
+      };
+    case "size_sub":
+      return {
+        left: convertSizeNode(node.child(0), context),
+        right: convertSizeNode(node.child(2), context),
+
+        sizeType: "sub",
         type: "SizeNode",
         position: toPosition(node),
       };
@@ -144,6 +162,8 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
     case "size":
     case "size_operation":
       return convertSizeNode(node.child(0), context);
+    case "size_paren":
+      return convertSizeNode(node.child(1), context);
   }
 
   return {} as SizeNode;

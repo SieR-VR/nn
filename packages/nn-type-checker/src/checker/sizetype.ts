@@ -6,41 +6,65 @@ import { DeclarationScope, Size } from '../resolver';
 export interface SizeType {
   left: Size | SizeType | number;
   right?: SizeType;
-
-  computeKind: 'pow' | 'mul' | 'add' | 'ident' | 'number';
+  
+  node?: SizeNode;
+  computeKind: 'pow' | 'mul' | 'div' | 'add' | 'sub' | 'ident' | 'number';
 }
 
 export namespace SizeType {
   export function from(node: SizeNode, scope: DeclarationScope): SizeType {
     return match_string<SizeType, SizeNode["sizeType"]>(node.sizeType, {
-      add: () => ({
+      pow: () => ({
         left: from(node.left!, scope),
         right: from(node.right!, scope),
 
-        computeKind: 'add',
+        node,
+        computeKind: 'pow',
         type: 'Size',
       }),
       mul: () => ({
         left: from(node.left!, scope),
         right: from(node.right!, scope),
 
+        node,
         computeKind: 'mul',
         type: 'Size',
       }),
-      pow: () => ({
+      div: () => ({
         left: from(node.left!, scope),
         right: from(node.right!, scope),
 
-        computeKind: 'pow',
+        node,
+        computeKind: 'div',
+        type: 'Size',
+      }),
+      add: () => ({
+        left: from(node.left!, scope),
+        right: from(node.right!, scope),
+
+        node,
+        computeKind: 'add',
+        type: 'Size',
+      }),
+      sub: () => ({
+        left: from(node.left!, scope),
+        right: from(node.right!, scope),
+        
+        node,
+        computeKind: 'sub',
         type: 'Size',
       }),
       ident: () => ({
         left: Size.find(scope, node.ident!).unwrap(),
+                
+        node,
         computeKind: 'ident',
         type: 'Size',
       }),
       number: () => ({
         left: node.number!,
+                
+        node,
         computeKind: 'number',
         type: 'Size',
       })
@@ -53,9 +77,11 @@ export namespace SizeType {
     }
 
     switch (left.computeKind) {
-      case 'add':
-      case 'mul':
       case 'pow':
+      case 'mul':
+      case 'div':
+      case 'add':
+      case 'sub':
         return isSame(left.left as SizeType, right.left as SizeType) && isSame(left.right as SizeType, right.right as SizeType);
       case 'ident':
         return left.left === right.left;
@@ -70,9 +96,11 @@ export namespace SizeType {
     }
 
     switch (right.computeKind) {
-      case 'add':
-      case 'mul':
       case 'pow':
+      case 'mul':
+      case 'div':
+      case 'add':
+      case 'sub':
         return isSameStructure(left.left as SizeType, right.left as SizeType) && isSameStructure(left.right as SizeType, right.right as SizeType);
       case 'ident':
         return [left, right.left] as [SizeType, Size];
@@ -83,12 +111,12 @@ export namespace SizeType {
 
   export function convert(size: SizeType, dict: Map<Size, SizeType>): SizeType {
     switch (size.computeKind) {
-      case 'add':
+      case 'pow':
         return {
           left: convert(size.left as SizeType, dict),
           right: convert(size.right as SizeType, dict),
-
-          computeKind: 'add',
+        
+          computeKind: 'pow',
         };
       case 'mul':
         return {
@@ -97,12 +125,26 @@ export namespace SizeType {
 
           computeKind: 'mul',
         };
-      case 'pow':
+      case 'div':
         return {
           left: convert(size.left as SizeType, dict),
           right: convert(size.right as SizeType, dict),
 
-          computeKind: 'pow',
+          computeKind: 'div',
+        };
+      case 'add':
+        return {
+          left: convert(size.left as SizeType, dict),
+          right: convert(size.right as SizeType, dict),
+
+          computeKind: 'add',
+        };
+      case 'sub':
+        return {
+          left: convert(size.left as SizeType, dict),
+          right: convert(size.right as SizeType, dict),
+
+          computeKind: 'sub',
         };
       case 'ident':
         return dict.get(size.left as Size)!;
@@ -116,12 +158,16 @@ export namespace SizeType {
 
   export function toString(size: SizeType): string {
     switch (size.computeKind) {
-      case 'add':
-        return `${toString(size.left as SizeType)} + ${toString(size.right as SizeType)}`;
-      case 'mul':
-        return `${toString(size.left as SizeType)} * ${toString(size.right as SizeType)}`;
       case 'pow':
-        return `${toString(size.left as SizeType)} ^ ${toString(size.right as SizeType)}`;
+        return `(${toString(size.left as SizeType)} ^ ${toString(size.right as SizeType)})`;
+      case 'mul':
+        return `(${toString(size.left as SizeType)} * ${toString(size.right as SizeType)})`;
+      case 'div':
+        return `(${toString(size.left as SizeType)} / ${toString(size.right as SizeType)})`;
+      case 'add':
+        return `(${toString(size.left as SizeType)} + ${toString(size.right as SizeType)})`;
+      case 'sub':
+        return `(${toString(size.left as SizeType)} - ${toString(size.right as SizeType)})`;
       case 'ident':
         return (size.left as Size).ident;
       case 'number':

@@ -17,6 +17,10 @@ describe("parser", () => {
     it(`should parse ${file}`, async () => {
       const parserInput = fs.readFileSync(path.join(__dirname, 'cases', file), 'utf8');
       const source = SourceFile.parse(parserInput, file);
+      
+      if (source.diagnostics.length) {
+        console.log(source.diagnostics);
+      }
 
       expect(source.diagnostics.length).toBe(0);
     });

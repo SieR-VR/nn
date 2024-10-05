@@ -81,7 +81,7 @@ export interface SizeNode extends Node {
   ident?: Identifier
   number?: number
   
-  sizeType: "pow" | "mul" | "add" | "ident" | "number"
+  sizeType: "pow" | "mul" | "div" | "add" | "sub" | "ident" | "number"
   type: "SizeNode"
 }
 
