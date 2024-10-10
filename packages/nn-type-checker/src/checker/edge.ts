@@ -3,6 +3,7 @@ import { CallExpression, isAssignmentExpression, isCallExpression, isStringLiter
 
 import { DeclarationScope, Flow, Size } from "../resolver";
 import { TypeChecker, SizeType, Vertex, Type } from "..";
+import { Polynomial } from "./polynomial";
 
 export interface Edge {
   args: Vertex[];
@@ -117,7 +118,7 @@ export namespace Edge {
       })
   }
 
-  function convertType(edge: Edge, left: SizeType[], right: Size[], context: TypeChecker): Option<Type> {
+  function convertType(edge: Edge, left: SizeType[], right: Size[], sizeDict: Map<Size, SizeType>, context: TypeChecker): Option<Type> {
     const indicesMap = right.reduce((prev, size, index) => {
       if (!prev.has(size)) {
         prev.set(size, []);
@@ -127,23 +128,18 @@ export namespace Edge {
       return prev;
     }, new Map<Size, number[]>());
 
-    const sizeDict = new Map<Size, SizeType>();
-    left.forEach((size, index) => {
-      const calleeSize = right[index];
-      sizeDict.set(calleeSize, size);
-    });
-
     let failed = false;
     indicesMap.forEach(indices => {
       const [first, ...rest] = indices;
 
       for (const index of rest) {
-        if (!SizeType.isSame(left[first], left[index])) {
+        if (
+          !SizeType.isSame(left[first], left[index]) &&
+          !Polynomial.isSame(SizeType.polynomial(left[first]), SizeType.polynomial(left[index]))
+        ) {
           context.diagnostics.push({
             message: `Size mismatch: ${SizeType.toString(left[first])} != ${SizeType.toString(left[index])}.`,
-            position: left[index].node
-              ? left[index].node.position
-              : edge.toSolve.expression.position
+            position: edge.toSolve.expression.position
           });
 
           failed = true;
@@ -160,6 +156,60 @@ export namespace Edge {
     return Some(
       Type.convert(edge.callee.return.type.unwrap(), sizeDict)
     );
+  }
+
+  function validate(edge: Edge, sizeDict: Map<Size, SizeType>, context: TypeChecker): void {
+    const origin = edge.callee.flow.declaration.sizes;
+    Object.values(origin)
+      .forEach(size => {
+        if (!sizeDict.has(size)) {
+          context.diagnostics.push({
+            message: `Size ${size.ident} is ambiguous.`,
+            position: edge.toSolve.expression.position
+          });
+
+          edge.passed = false; // unrecoverable
+        }
+      });
+
+    if (edge.passed === false) return;
+
+    const polynomialDict = new Map<Size, Polynomial>();
+    sizeDict.forEach((size, key) => {
+      polynomialDict.set(key, SizeType.polynomial(size));
+    });
+
+    const leftArgs = edge.args.map(arg => arg.type.unwrap());
+    const rightArgs = edge.callee.args.map(arg => arg.type.unwrap());
+
+    const [left, right] = leftArgs.reduce<[SizeType[], SizeType[]]>(([left, right], _, index) => {
+      if (index === 0) {
+        const [from, to] = Type.findAssignable(leftArgs[index], rightArgs[index]).unwrap();
+        left.push(...from), right.push(...to);
+      } else {
+        const [from, to] = Type.findAssignableExact(leftArgs[index], rightArgs[index]).unwrap();
+        left.push(...from), right.push(...to);
+      }
+
+      return [left, right];
+    }, [[], []]);
+
+    left.forEach((_, index) => {
+      const leftPolynomial = SizeType.polynomial(left[index])
+      const rightPolynomial = Polynomial.assign(
+        SizeType.polynomial(right[index]),
+        polynomialDict
+      )
+
+      if (!Polynomial.isSame(leftPolynomial, rightPolynomial)) {
+        context.diagnostics.push({
+          message: `Size mismatch: ${Polynomial.inspect(leftPolynomial)} != ${Polynomial.inspect(rightPolynomial)}.`,
+          position: edge.toSolve.expression.position
+        });
+
+        edge.passed = false; // unrecoverable
+      }
+    });
   }
 
   export function solve(edge: Edge, context: TypeChecker): void {
@@ -181,11 +231,23 @@ export namespace Edge {
 
     const [left, right] = (() => {
       if (edge.sizeArgs.length && edge.callee.sizes.length) {
+        if (edge.sizeArgs.length !== edge.callee.sizes.length) {
+          context.diagnostics.push({
+            message: `Expected ${edge.callee.sizes.length} sizes, but got ${edge.sizeArgs.length}.`,
+            position: edge.toSolve.expression.position
+          });
+
+          edge.passed = false; // unrecoverable
+          return [[], []];
+        }
+
         return [[...edge.sizeArgs], [...edge.callee.sizes]];
       }
 
       return [[], []];
     })();
+
+    if (edge.passed === false) return;
 
     let from: SizeType[] | undefined;
 
@@ -248,12 +310,22 @@ export namespace Edge {
 
     if (edge.passed === false) return;
 
+    const sizeDict = new Map<Size, SizeType>();
+    left.forEach((size, index) => {
+      const calleeSize = right[index];
+      sizeDict.set(calleeSize, size);
+    });
+
+    validate(edge, sizeDict, context);
+
+    if (edge.passed === false) return;
+
     if (left.length === 0) {
       edge.passed = true;
       return;
     }
 
-    const result = convertType(edge, left, right, context);
+    const result = convertType(edge, left, right, sizeDict, context);
     if (result.is_some()) {
       const type = result.unwrap();
       edge.toSolve.type = from 

@@ -40,22 +40,6 @@ export namespace Vertex {
       .map(arg => Vertex.from(arg.ident, Some(Type.from(arg.valueType, scope))))
       .reduce(reducer, vertices);
 
-    travel(scope.node, isIdentifierExpression)
-      .map((expression): Vertex => {
-        const value = Value.find(scope, expression.ident).unwrap();
-        const vertex = Array.from(value.nodes.values()).find(node => vertices.has(node));
-
-        return {
-          expression,
-          type: vertex
-            ? vertices.get(vertex)!.type
-            : None()
-        };
-      })
-      .forEach(vertex => {
-        vertices.set(vertex.expression, vertex);
-      });
-
     travel(scope.node, isCallExpression)
       .forEach(expression => {
         if (expression.callee.value === 'Trainable') {
@@ -78,6 +62,13 @@ export namespace Vertex {
         }
 
         vertices.set(assignmentExpr, vertices.get(assignmentExpr.right)!);
+        vertices.set(assignmentExpr.left, vertices.get(assignmentExpr.right)!);
+      });
+
+    travel(scope.node, isIdentifierExpression)
+      .forEach((expression) => {
+        const value = Value.find(scope, expression.ident).unwrap();
+        vertices.set(expression, vertices.get(value.first)!);
       });
   }
 }

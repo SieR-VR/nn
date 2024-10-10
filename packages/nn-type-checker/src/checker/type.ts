@@ -3,6 +3,7 @@ import { CallExpression, TypeNode } from "nn-language";
 
 import { DeclarationScope, Size } from "../resolver";
 import { SizeType } from "./sizetype";
+import { Polynomial } from "./polynomial";
 
 export interface Type {
   type: 'Tensor';
@@ -28,7 +29,10 @@ export namespace Type {
       const leftSize = left.shape[i];
       const rightSize = right.shape[i];
 
-      if (!SizeType.isSame(leftSize, rightSize)) {
+      if (
+        !SizeType.isSame(leftSize, rightSize) &&
+        !Polynomial.isSame(Polynomial.from(leftSize), Polynomial.from(rightSize))
+      ) {
         return false;
       }
     }
@@ -50,7 +54,7 @@ export namespace Type {
       const leftSize = from.shape.at(i)!;
       const rightSize = to.shape.at(i)!;
 
-      const result = SizeType.isSameStructure(leftSize, rightSize);
+      const result = SizeType.isAssignable(leftSize, rightSize);
 
       if (!result) {
         return None();
@@ -77,13 +81,59 @@ export namespace Type {
       const leftSize = from.shape[i];
       const rightSize = to.shape[i];
 
-      const result = SizeType.isSameStructure(leftSize, rightSize);
+      const result = SizeType.isAssignable(leftSize, rightSize);
 
       if (!result) {
         return None();
       }
 
       if (result !== true) {
+        const [left, right] = result;
+        result_[0].push(left);
+        result_[1].push(right);
+      }
+    }
+
+    return Some(result_);
+  }
+
+  export function findAssignable(from: Type, to: Type): Option<[SizeType[], SizeType[]]> {
+    const result_: [SizeType[], SizeType[]] = [[], []];
+
+    if (from.shape.length < to.shape.length) {
+      return None();
+    }
+
+    for (let i = -1; i >= -to.shape.length; i--) {
+      const leftSize = from.shape.at(i)!;
+      const rightSize = to.shape.at(i)!;
+
+      const result = SizeType.findAssignable(leftSize, rightSize);
+
+      if (result) {
+        const [left, right] = result;
+        result_[0].push(left);
+        result_[1].push(right);
+      }
+    }
+
+    return Some(result_);
+  }
+
+  export function findAssignableExact(from: Type, to: Type): Option<[SizeType[], SizeType[]]> {
+    const result_: [SizeType[], SizeType[]] = [[], []];
+
+    if (from.shape.length !== to.shape.length) {
+      return None();
+    }
+
+    for (let i = 0; i < from.shape.length; i++) {
+      const leftSize = from.shape[i];
+      const rightSize = to.shape[i];
+
+      const result = SizeType.findAssignable(leftSize, rightSize);
+
+      if (result) {
         const [left, right] = result;
         result_[0].push(left);
         result_[1].push(right);
