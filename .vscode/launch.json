@@ -7,6 +7,14 @@
       "request": "launch",
       "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/nn-language-server"],
       "preLaunchTask": "npm: build"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/src/index.ts",
+      "preLaunchTask": "npm: build",
+      "outFiles": ["${workspaceFolder}/**/out/**/*.js"]
     }
   ]
 }
