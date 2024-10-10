@@ -8,8 +8,7 @@ import {
 
 import {
   TypeChecker,
-  Size,
-  SizeType,
+  Type,
 } from 'nn-type-checker'
 
 import { MarkdownString } from "../utils";
@@ -45,12 +44,7 @@ export async function hover(params: TextDocumentPositionParams, context: LspCont
 
   if (vertex.type.is_some()) {
     markdown.appendCodeblock(
-      `Tensor[${
-        vertex.type.unwrap()
-          .shape
-          .map(sizeTypeToString)
-          .join(', ')
-      }]`,
+      Type.toString(vertex.type.unwrap()),
       'nn'
     );
   }
@@ -65,28 +59,5 @@ export async function hover(params: TextDocumentPositionParams, context: LspCont
       start: document.positionAt(vertex.expression.position.pos),
       end: document.positionAt(vertex.expression.position.end),
     }
-  }
-}
-
-function sizeTypeToString(type: SizeType): string {
-  const computeKindMap = {
-    'pow': '^',
-    'mul': '*',
-    'div': '/',
-    'add': '+',
-    'sub': '-',
-  }
-
-  switch (type.computeKind) {
-    case 'pow':
-    case 'mul':
-    case 'div':
-    case 'add':
-    case 'sub':
-      return `(${sizeTypeToString(type.left as SizeType)} ${computeKindMap[type.computeKind]} ${sizeTypeToString(type.right!)})`;
-    case 'ident':
-      return (type.left as Size).ident
-    case 'number':
-      return type.left.toString();
   }
 }

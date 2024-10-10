@@ -21,12 +21,13 @@ Conv2DTransposed[
   Kernel,
   Padding,
   Stride,
+  Pool,
   Channel
 ](
   x: Tensor[H, W, C]
 ): Tensor[
-  (H - 1) * Stride - 2 * Padding + Kernel,
-  (W - 1) * Stride - 2 * Padding + Kernel,
+  ((H - 1) * Stride - 2 * Padding + Kernel) * Pool,
+  ((W - 1) * Stride - 2 * Padding + Kernel) * Pool,
   Channel
 ]
 
@@ -40,21 +41,24 @@ ConvBlock[Channel](x: Tensor[H, W, C]) =
   |> BatchNorm()
   |> ReLU()
 
-UNetEncoder[Channel, Pool](x: Tensor[H, W, C]) =
+UNetEncoder[Channel](x: Tensor[H, W, C]) =
   |> ConvBlock[Channel]()
-  |> MaxPool[Pool]()
 
-UNetDecoder[Channel](x: Tensor[H, W, C], skip: Tensor[H, W, C]) =
+UNetDecoder[Channel](x: Tensor[H, W, C], skip: Tensor[H * 2, W * 2, Channel]) =
   x
-  |> Conv2DTransposed[3, 1, 1, Channel]()
+  |> Conv2DTransposed[3, 1, 1, 2, Channel]()
   |> Concat(skip)
   |> ConvBlock[Channel]()
 
 UNet[Channel](x: Tensor[H, W, C]) =
   |> s1 = UNetEncoder[Channel]()
+  |> p1 = MaxPool[2]()
   |> s2 = UNetEncoder[Channel * 2]()
+  |> p2 = MaxPool[2]()
   |> s3 = UNetEncoder[Channel * 4]()
+  |> p3 = MaxPool[2]()
   |> s4 = UNetEncoder[Channel * 8]()
+  |> p4 = MaxPool[2]()
   
   |> ConvBlock[Channel * 8]()
 
