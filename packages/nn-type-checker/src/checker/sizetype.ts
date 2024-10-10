@@ -39,8 +39,8 @@ export namespace SizeType {
       case "add":
       case "sub":
         return {
-          left: from(node.left!, scope),
-          right: from(node.right!, scope),
+          left: from(node.left, scope),
+          right: from(node.right, scope),
 
           node,
           computeKind: node.sizeType,

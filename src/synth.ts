@@ -59,11 +59,15 @@ const pyinits = (decl: Declaration, indent: number = 4) => {
   const synthSizeNode = (node: SizeNode): string => {
     switch (node.sizeType) {
       case "add":
-        return `(${synthSizeNode(node.left!)} + ${synthSizeNode(node.right!)})`
+        return `(${synthSizeNode(node.left)} + ${synthSizeNode(node.right)})`
       case "mul":
-        return `(${synthSizeNode(node.left!)} * ${synthSizeNode(node.right!)})`
+        return `(${synthSizeNode(node.left)} * ${synthSizeNode(node.right)})`
       case "pow":
-        return `(${synthSizeNode(node.left!)} ** ${synthSizeNode(node.right!)})`
+        return `(${synthSizeNode(node.left)} ** ${synthSizeNode(node.right)})`
+      case "sub":
+        return `(${synthSizeNode(node.left)} - ${synthSizeNode(node.right)})`
+      case "div":
+        return `(${synthSizeNode(node.left)} / ${synthSizeNode(node.right)})`
       case "ident":
         return node.ident!.value
       case "number":
