@@ -10,21 +10,20 @@ export namespace Polynomial {
   export function from(sizeType: SizeType): Polynomial {
     switch (sizeType.computeKind) {
       case 'pow':
-        // TODO
-        throw new Error('Not implemented');
       case 'mul':
-        return mul(from(sizeType.left), from(sizeType.right));
       case 'div':
-        return div(from(sizeType.left), from(sizeType.right));
       case 'add':
-        return add(from(sizeType.left), from(sizeType.right));
       case 'sub':
-        return sub(from(sizeType.left), from(sizeType.right));
+        return Polynomial[sizeType.computeKind](from(sizeType.left), from(sizeType.right));
       case 'ident':
         return ident(sizeType.left as Size);
       case 'number':
         return constant(sizeType.left as number);
     }
+  }
+
+  export function pow(left: Polynomial, right: Polynomial): Polynomial {
+    throw new Error('Not implemented');
   }
 
   export function constant(c: number): Polynomial {
