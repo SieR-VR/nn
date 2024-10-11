@@ -1,0 +1,14 @@
+{
+  "name": "nn-codegen",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "yarn run -T swc ./src -d ./out"
+  },
+  "dependencies": {
+    "nn-language": "workspace:^",
+    "nn-type-checker": "workspace:^"
+  },
+  "typings": "src/index.ts",
+  "main": "out/src/index.js"
+}

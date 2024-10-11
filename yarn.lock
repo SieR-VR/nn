@@ -3736,6 +3736,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nn-codegen@workspace:packages/nn-codegen":
+  version: 0.0.0-use.local
+  resolution: "nn-codegen@workspace:packages/nn-codegen"
+  dependencies:
+    nn-language: "workspace:^"
+    nn-type-checker: "workspace:^"
+  languageName: unknown
+  linkType: soft
+
 "nn-language-server@workspace:packages/nn-language-server":
   version: 0.0.0-use.local
   resolution: "nn-language-server@workspace:packages/nn-language-server"

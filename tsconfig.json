@@ -9,9 +9,12 @@
     "strict": true,
     "noEmit": true,
 
+    "resolveJsonModule": true,
+
 		"rootDir": ".",
 	},
 	"exclude": [
 		"node_modules",
+    "out"
 	]
 }
