@@ -4,21 +4,19 @@ import { Edge } from "./edge";
 import { Type, TypeChecker } from "..";
 
 export function checker(context: TypeChecker) {
-  const edges: Edge[] = [];
-
   Object.values(context.scope.declarations)
     .forEach(decl => Vertex.getAll(decl, context.vertices))
 
   Object.values(context.scope.declarations)
-    .forEach(decl => Edge.getAll(decl, edges, context))
+    .forEach(decl => Edge.getAll(decl, context.edges, context))
 
   let passedCount = 0, lastPassedCount = -1;
 
-  while (passedCount < edges.length && passedCount !== lastPassedCount) {
-    edges.forEach((edge) => Edge.solve(edge, context));
+  while (passedCount < context.edges.length && passedCount !== lastPassedCount) {
+    context.edges.forEach((edge) => Edge.solve(edge, context));
 
     lastPassedCount = passedCount;
-    passedCount = edges.filter(edge => edge.passed === true).length;
+    passedCount = context.edges.filter(edge => edge.passed === true).length;
   }
 
   Object.values(context.scope.declarations)

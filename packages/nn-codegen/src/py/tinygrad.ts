@@ -10,6 +10,16 @@ const tinygrad: PySynthSettings = {
       target: "Conv2D"
     },
     {
+      opName: "conv2d_transpose",
+      tensorOp: true,
+      target: "Conv2DTransposed"
+    },
+    {
+      opName: "concat",
+      tensorOp: true,
+      target: "Concat"
+    },
+    {
       opName: "relu",
       tensorOp: true,
       target: "ReLU"
@@ -22,7 +32,7 @@ const tinygrad: PySynthSettings = {
     {
       opName: "max_pool2d",
       tensorOp: true,
-      target: "MaxPool2D"
+      target: "MaxPool"
     }
   ]
 }

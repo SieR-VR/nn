@@ -1,14 +1,15 @@
 import { Option, Some, None } from "ts-features";
 
-import { Declaration, Expression, isAssignmentExpression, isCallExpression, isIdentifierExpression, isStringLiteralExpression, isTupleExpression, StringLiteralExpression } from "nn-language";
+import { CallExpression, Declaration, Expression, isAssignmentExpression, isCallExpression, isIdentifierExpression, isStringLiteralExpression, isTupleExpression, StringLiteralExpression } from "nn-language";
 import { TypeChecker } from "nn-type-checker";
+
 import { PySynthSettings } from ".";
 
-function subExpression(expr: Expression, checker: TypeChecker, settings: PySynthSettings, buffer: string[]): string {
+function subExpression(expr: Expression, checker: TypeChecker, settings: PySynthSettings, dict: Map<CallExpression, string>, buffer: string[]): string {
   const sub = (expr: Expression | string) => 
     typeof expr === 'string' 
       ? expr 
-      : subExpression(expr, checker, settings, buffer)
+      : subExpression(expr, checker, settings, dict, buffer)
 
   if (isCallExpression(expr)) {
     const { callee, args } = expr
@@ -20,7 +21,9 @@ function subExpression(expr: Expression, checker: TypeChecker, settings: PySynth
     const right = [...buffer, ...args].map(sub)
     const flow = checker.scope.flows[callee.value]!;
 
-    // TODO: member memorize
+    if (flow.return) {
+      return `${dict.get(expr)}(${right.join(", ")})`
+    }
 
     const operation = settings.operations.find((op) => op.target === callee.value)
 
@@ -55,8 +58,8 @@ function subExpression(expr: Expression, checker: TypeChecker, settings: PySynth
   throw new Error("Unreachable expression as code")
 }
 
-function expression(expr: Expression, checker: TypeChecker, settings: PySynthSettings, buffer: string[]): [Option<string>, string[]] {
-  const sub = (expr: Expression) => subExpression(expr, checker, settings, buffer)
+function expression(expr: Expression, checker: TypeChecker, settings: PySynthSettings, dict: Map<CallExpression, string>, buffer: string[]): [Option<string>, string[]] {
+  const sub = (expr: Expression) => subExpression(expr, checker, settings, dict, buffer)
 
   if (isCallExpression(expr)) {
     return [
@@ -67,7 +70,7 @@ function expression(expr: Expression, checker: TypeChecker, settings: PySynthSet
   if (isIdentifierExpression(expr)) {
     return [
       None(),
-      [`${(expr).ident}`]
+      [expr.ident.value]
     ]
   }
   if (isAssignmentExpression(expr)) {
@@ -109,20 +112,22 @@ function expression(expr: Expression, checker: TypeChecker, settings: PySynthSet
   throw new Error("Unreachable expression as code")
 }
 
-export function expressions(decl: Declaration, checker: TypeChecker, settings: PySynthSettings, indent: number = 4): string {
-  const indentStr = " ".repeat(indent)
+export function expressions(decl: Declaration, checker: TypeChecker, settings: PySynthSettings, dict: Map<CallExpression, string>, indent: number = 4): string {
+  const indentStr = " ".repeat(indent);
 
   let code = "";
   let buffer = decl.firstPipe
     ? decl.argumentList.args.map((arg) => arg.ident.value)
-    : []
+    : [];
 
   decl.exprs.forEach((expr) => {
-    const [line, next] = expression(expr, checker, settings, buffer)
+    const [line, next] = expression(expr, checker, settings, dict, buffer);
 
-    line.map((l) => code += `${indentStr}${l}\n`)
-    buffer = next
-  })
+    line.map((l) => code += `${indentStr}${l}\n`);
+    buffer = next;
+  });
 
-  return code
+  code += `${indentStr}return ${buffer.join(", ")}\n`;
+
+  return code;
 }
