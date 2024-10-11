@@ -74,15 +74,18 @@ export type Expression =
   | IdentifierExpression 
   | StringLiteralExpression
 
-export interface SizeNode extends Node {
-  left?: SizeNode
-  right?: SizeNode
-
-  ident?: Identifier
-  number?: number
+export interface ArithmeticNode extends Node {
+  left: SizeNode
+  right: SizeNode
   
-  sizeType: "pow" | "mul" | "div" | "add" | "sub" | "ident" | "number"
+  sizeType: "pow" | "mul" | "div" | "add" | "sub" 
   type: "SizeNode"
+}
+export type SizeNode = ArithmeticNode | Node & {
+  ident?: Identifier,
+  number?: number,
+  sizeType: "ident" | "number",
+  type: "SizeNode",
 }
 
 export interface TypeNode extends Node {
