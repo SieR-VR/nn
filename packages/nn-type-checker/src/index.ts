@@ -1,10 +1,10 @@
-import { Result, Ok, Err } from 'ts-features';
-import { Node, Diagnostic, SourceFile } from 'nn-language';
+import { Result, Ok, Err, Option, Some, None } from 'ts-features';
+import { Node, Diagnostic, SourceFile, CallExpression } from 'nn-language';
 
 import { checker, Type, Vertex } from './checker';
 import { FileScope, Flow, resolve } from './resolver';
 
-import { Callee } from './checker/edge';
+import { Callee, Edge } from './checker/edge';
 
 export * from './resolver'
 export * from './checker'
@@ -16,6 +16,7 @@ export interface TypeChecker {
 
   globalFlows: Record<string, Flow>;
   vertices: Map<Node, Vertex>;
+  edges: Edge[];
 
   diagnostics: Diagnostic[];
   nonRecoverable: boolean;
@@ -34,14 +35,15 @@ export namespace TypeChecker {
    * @returns the type checker object
    */
   export function check(source: SourceFile): TypeChecker {
-    const context: TypeChecker = { 
+    const context: TypeChecker = {
       path: source.path,
 
       scope: {} as FileScope,
-      
+
       globalFlows: {},
       vertices: new Map(),
-      
+      edges: [],
+
       diagnostics: [],
       nonRecoverable: false,
 
@@ -63,7 +65,7 @@ export namespace TypeChecker {
     NodeHasNoType = 'Node has no type',
     NodeIsNotVertex = 'Node is not a vertex',
   }
-  
+
   /**
    * 
    * @param node the target node
@@ -73,10 +75,23 @@ export namespace TypeChecker {
   export function getType(node: Node, checker: TypeChecker): Result<Type, GetTypeError> {
     return checker.vertices.has(node)
       ? checker.vertices.get(node)!.type
-          .map_or_else(
-            () => Err(GetTypeError.NodeHasNoType),
-            (type) => Ok(type)
-          )
+        .map_or_else(
+          () => Err(GetTypeError.NodeHasNoType),
+          (type) => Ok(type)
+        )
       : Err(GetTypeError.NodeIsNotVertex)
   }
+
+  /**
+   * 
+   * @param node the target call expression node
+   * @param checker the type checker object
+   * @returns the edge object
+   */
+  export function getEdge(node: CallExpression, checker: TypeChecker): Option<Edge> {
+    const edge = checker.edges.find(edge => edge.toSolve.expression === node);
+
+    return edge ? Some(edge) : None();
+  }
+
 }

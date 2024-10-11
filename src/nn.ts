@@ -5,14 +5,15 @@ import { Command } from "commander";
 
 import { SourceFile } from "nn-language";
 import { TypeChecker } from "nn-type-checker";
+import { codegen, getSettings } from "nn-codegen" 
 
-import { synth } from "./synth" 
 import { exit } from "process";
 
 const program = new Command('nn')
   .version('0.1')
   .option('-f, --file <file>', 'File to compile')
   .option('-o, --output <output>', 'Output python file')
+  .option('-t, --target <target>', 'Target framework settings file or framework name')
   .parse(process.argv);
 
 const opts = program.opts();
@@ -75,20 +76,10 @@ if (diagnostics.length) {
   exit(1);
 }
 
-const python = 
-`from tinygrad import Tensor
-
-${source.tree
-  .filter(decl => decl.exprs.length)
-  .map((decl) => {
-  return synth.py`class ${decl.name.value}:
-  def __init__(self, ${decl.sizeDeclList}):
-    ${synth.py.inits(decl)}
-    
-  def __call__(self, ${decl.argumentList}):
-    ${synth.py.forward(decl)}
-`}).join("\n")}
-`
+const settings = getSettings(opts.target, (path: string) => {
+  return fs.readFileSync(path, 'utf-8');
+})
+const python = codegen(source, checkContext, settings);
 
 const output = opts.output 
   || path.join(process.cwd(), path.basename(file.replace(/\.nn$/, '') + '.py'));
