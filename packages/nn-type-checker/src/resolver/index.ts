@@ -1,7 +1,7 @@
 import { SourceFile } from "nn-language";
 
 import { Scope } from "./scope";
-import { Value, Size, Flow, TypeChecker } from "..";
+import { Flow, Size, TypeChecker, Value } from "..";
 
 /**
  * Resolves the names in the syntax tree.

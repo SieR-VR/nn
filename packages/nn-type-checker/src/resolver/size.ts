@@ -1,5 +1,5 @@
 import { None, Option, Some } from "ts-features";
-import { Node, Identifier, travel, isSizeNode } from "nn-language";
+import { Identifier, isIdentifierSizeNode, Node, travel } from "nn-language";
 
 import { DeclarationScope } from "./scope";
 import { TypeChecker } from "..";
@@ -56,24 +56,22 @@ export namespace Size {
         scope.sizes[size.value] = make(scope, size);
       });
 
-    travel(scope.node.argumentList, isSizeNode)
-      .filter(size => size.sizeType === "ident")
+    travel(scope.node.argumentList, isIdentifierSizeNode)
       .forEach(sizeNode =>
-        find(scope, sizeNode.ident!)
+        find(scope, sizeNode.ident)
           .map_or_else<unknown>(
-            () => scope.sizes[sizeNode.ident!.value] = make(scope, sizeNode.ident!),
+            () => scope.sizes[sizeNode.ident.value] = make(scope, sizeNode.ident),
             (size) => size.nodes.add(sizeNode),
           )
       );
 
-    scope.node.returnType && travel(scope.node, isSizeNode)
-      .filter(size => size.sizeType === "ident")
+    scope.node.returnType && travel(scope.node, isIdentifierSizeNode)
       .forEach(sizeNode =>
-        find(scope, sizeNode.ident!)
+        find(scope, sizeNode.ident)
           .map_or_else<unknown>(
             () => {
               context.diagnostics.push({
-                message: `Using undeclared size name '${sizeNode.ident!.value}'.`,
+                message: `Using undeclared size name '${sizeNode.ident.value}'.`,
                 position: sizeNode.position
               })
               context.nonRecoverable = true;
@@ -82,14 +80,13 @@ export namespace Size {
           )
       );
 
-    travel(scope.node.exprs, isSizeNode)
-      .filter(ident => ident.sizeType === "ident")
+    travel(scope.node.exprs, isIdentifierSizeNode)
       .forEach(sizeNode =>
-        find(scope, sizeNode.ident!)
+        find(scope, sizeNode.ident)
           .map_or_else<unknown>(
             () => {
               context.diagnostics.push({
-                message: `Using undeclared size name '${sizeNode.ident!.value}'.`,
+                message: `Using undeclared size name '${sizeNode.ident.value}'.`,
                 position: sizeNode.position
               })
               context.nonRecoverable = true;

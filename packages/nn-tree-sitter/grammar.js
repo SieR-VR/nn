@@ -68,14 +68,14 @@ module.exports = grammar({
     size_number: $ => $.number,
 
     type: $ => seq($.ident, optional($.size_type)),
-    ident: $ => token(/[a-zA-Z_$][\w_]*/), 
+    ident: () => token(/[a-zA-Z_$][\w_]*/), 
 
     string: $ => choice($.singleQuotedString, $.doubleQuotedString),
-    singleQuotedString: $ => /'[^']*'/,
-    doubleQuotedString: $ => /"[^"]*"/,
+    singleQuotedString: () => /'[^']*'/,
+    doubleQuotedString: () => /"[^"]*"/,
 
-    number: $ => /-?\d+(\.\d+)?/,
-    comment: $ => token(/#.*\n/),
+    number: () => /-?\d+(\.\d+)?/,
+    comment: () => token(/#.*\n/),
   },
   extras: $ => [
     $.comment,

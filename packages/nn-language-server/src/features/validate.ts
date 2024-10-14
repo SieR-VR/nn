@@ -3,8 +3,6 @@ import { URI } from "vscode-uri";
 
 import {
   SourceFile,
-  travel,
-  isDeclaration,
 } from 'nn-language'
 
 import { TypeChecker } from "nn-type-checker";

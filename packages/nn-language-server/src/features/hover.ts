@@ -2,18 +2,18 @@ import { CancellationToken, Hover, TextDocumentPositionParams } from "vscode-lan
 import { LspContext } from "../types";
 
 import {
-  SourceFile,
   nodeOnPosition,
+  SourceFile,
 } from 'nn-language'
 
 import {
-  TypeChecker,
   Type,
+  TypeChecker,
 } from 'nn-type-checker'
 
 import { MarkdownString } from "../utils";
 
-export async function hover(params: TextDocumentPositionParams, context: LspContext, token?: CancellationToken): Promise<Hover | null> {
+export async function hover(params: TextDocumentPositionParams, context: LspContext, _token?: CancellationToken): Promise<Hover | null> {
   const document = context.documents.get(params.textDocument.uri);
   if (!document) {
     return null;

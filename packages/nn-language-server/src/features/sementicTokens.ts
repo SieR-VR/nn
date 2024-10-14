@@ -2,9 +2,9 @@ import { DocumentSymbolParams, SemanticTokens, SemanticTokensBuilder, SymbolKind
 import { LspContext } from "../types";
 
 import {
+  isCallExpression,
   SourceFile,
   travel,
-  isCallExpression,
 } from 'nn-language'
 
 export function semanticTokens(params: DocumentSymbolParams, context: LspContext): SemanticTokens {

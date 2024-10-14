@@ -1,5 +1,5 @@
-import { Result, Ok, Err, Option, Some, None } from 'ts-features';
-import { Node, Diagnostic, SourceFile, CallExpression } from 'nn-language';
+import { Err, None, Ok, Option, Result, Some } from 'ts-features';
+import { CallExpression, Diagnostic, Node, SourceFile } from 'nn-language';
 
 import { checker, Type, Vertex } from './checker';
 import { FileScope, Flow, resolve } from './resolver';

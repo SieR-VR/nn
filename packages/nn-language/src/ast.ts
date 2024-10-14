@@ -19,7 +19,7 @@ export interface ArgumentList extends Node {
 
 export interface Identifier extends Node {
   value: string
-  
+
   type: "Identifier"
 }
 
@@ -67,26 +67,39 @@ export interface StringLiteralExpression extends Node {
   type: "StringLiteralExpression"
 }
 
-export type Expression = 
-  | CallExpression 
+export type Expression =
+  | CallExpression
   | TupleExpression
-  | AssignmentExpression 
-  | IdentifierExpression 
+  | AssignmentExpression
+  | IdentifierExpression
   | StringLiteralExpression
 
-export interface ArithmeticNode extends Node {
+export interface ArithmeticSizeNode extends Node {
   left: SizeNode
   right: SizeNode
-  
-  sizeType: "pow" | "mul" | "div" | "add" | "sub" 
-  type: "SizeNode"
+
+  sizeType: "pow" | "mul" | "div" | "add" | "sub"
+  type: "ArithmeticSizeNode"
 }
-export type SizeNode = ArithmeticNode | Node & {
-  ident?: Identifier,
-  number?: number,
-  sizeType: "ident" | "number",
-  type: "SizeNode",
+
+export interface IdentifierSizeNode extends Node {
+  ident: Identifier
+
+  sizeType: "ident"
+  type: "IdentifierSizeNode"
 }
+
+export interface NumberSizeNode extends Node {
+  number: number
+
+  sizeType: "number"
+  type: "NumberSizeNode"
+}
+
+export type SizeNode =
+  | ArithmeticSizeNode
+  | IdentifierSizeNode
+  | NumberSizeNode
 
 export interface TypeNode extends Node {
   isTensor: boolean // true
@@ -144,5 +157,19 @@ export function isTypeNode(node: Node): node is TypeNode {
 }
 
 export function isSizeNode(node: Node): node is SizeNode {
-  return node.type === "SizeNode"
+  return isArithmeticSizeNode(node)
+    || isIdentifierSizeNode(node)
+    || isNumberSizeNode(node)
+}
+
+export function isArithmeticSizeNode(node: Node): node is ArithmeticSizeNode {
+  return node.type === "ArithmeticSizeNode"
+}
+
+export function isIdentifierSizeNode(node: Node): node is IdentifierSizeNode {
+  return node.type === "IdentifierSizeNode"
+}
+
+export function isNumberSizeNode(node: Node): node is NumberSizeNode {
+  return node.type === "NumberSizeNode"
 }

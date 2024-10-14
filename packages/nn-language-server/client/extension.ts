@@ -8,7 +8,7 @@ import {
   TransportKind,
 } from "vscode-languageclient/node";
 
-import { makeProvider, legend } from "./semanticTokenProvider";
+import { legend, makeProvider } from "./semanticTokenProvider";
 
 let client: LanguageClient;
 

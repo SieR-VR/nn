@@ -1,4 +1,4 @@
-import { Option, Some, None } from "ts-features";
+import { None, Option, Some } from "ts-features";
 import { isAssignmentExpression, isCallExpression, isIdentifierExpression, Node, travel } from "nn-language";
 
 import { Type } from "./type";

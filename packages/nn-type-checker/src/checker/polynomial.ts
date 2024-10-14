@@ -23,6 +23,7 @@ export namespace Polynomial {
   }
 
   export function pow(left: Polynomial, right: Polynomial): Polynomial {
+    // TODO
     throw new Error('Not implemented');
   }
 

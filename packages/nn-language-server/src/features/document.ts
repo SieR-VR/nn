@@ -1,9 +1,7 @@
 import { 
-  CancellationTokenSource, 
-  DidChangeTextDocumentParams, 
+  CancellationTokenSource,
   DidCloseTextDocumentParams, 
-  DidOpenTextDocumentParams, 
-  DocumentUri,
+  DidOpenTextDocumentParams,
   TextDocumentChangeEvent
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
@@ -12,7 +10,7 @@ import { URI } from "vscode-uri";
 import { validateAllDocuments } from "./validate";
 
 import { LspContext } from "../types";
-import { ResourceMap, getOrderedFileSet } from "../utils/resourceMap";
+import { getOrderedFileSet, ResourceMap } from "../utils/resourceMap";
 import { Delayer } from "../utils/delayer";
 
 const pendingDiagnostics = new ResourceMap<number>()

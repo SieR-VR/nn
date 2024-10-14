@@ -1,4 +1,4 @@
-import { Option, Some, None } from "ts-features";
+import { None, Option, Some } from "ts-features";
 
 import { CallExpression, Declaration, Expression, isAssignmentExpression, isCallExpression, isIdentifierExpression, isStringLiteralExpression, isTupleExpression, StringLiteralExpression } from "nn-language";
 import { TypeChecker } from "nn-type-checker";

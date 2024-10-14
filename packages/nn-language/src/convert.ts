@@ -1,10 +1,23 @@
 import Parser from "tree-sitter";
 
-import { ArgumentList, AssignmentExpression, CallExpression, Declaration, Expression, Identifier, IdentifierExpression, Node, SizeDeclList, SizeNode, StringLiteralExpression, TupleExpression, TypeNode } from "./ast";
+import {
+  ArgumentList,
+  AssignmentExpression,
+  CallExpression,
+  Declaration, 
+  Expression, 
+  Identifier, 
+  IdentifierExpression, 
+  SizeDeclList, 
+  SizeNode, 
+  StringLiteralExpression, 
+  TupleExpression, 
+  TypeNode
+} from "./ast";
 import { toPosition } from "./utils";
 import { SourceFile } from ".";
 
-function convertIdentifier(node: Parser.SyntaxNode | null, context: SourceFile): Identifier {
+function convertIdentifier(node: Parser.SyntaxNode | null, _context: SourceFile): Identifier {
   if (!node) {
     throw new Error(`Expected an identifier node, got null`);
   }
@@ -62,15 +75,15 @@ export function convertDeclaration(node: Parser.SyntaxNode, context: SourceFile)
     name: convertIdentifier(node.childForFieldName('name'), context),
     sizeDeclList: convertSizeDeclList(node.childForFieldName('sizeDeclList'), context),
     argumentList: convertArgumentList(node.childForFieldName('argumentList'), context),
-    returnType: node.childForFieldName('returnType') 
+    returnType: node.childForFieldName('returnType')
       ? convertTypeNode(node.childForFieldName('returnType'), context)
       : undefined,
 
     firstPipe: node.childForFieldName('firstPipe') !== null,
     exprs:
-      node.childForFieldName('expressions') 
+      node.childForFieldName('expressions')
         ? [node.childForFieldName('expr_first'), ...node.childrenForFieldName('expr_last')]
-            .map((child) => convertExpression(child, context))
+          .map((child) => convertExpression(child, context))
         : [],
 
     position: toPosition(node),
@@ -104,7 +117,7 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
         right: convertSizeNode(node.child(2), context),
 
         sizeType: "pow",
-        type: "SizeNode",
+        type: "ArithmeticSizeNode",
         position: toPosition(node),
       };
     case "size_mul":
@@ -113,7 +126,7 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
         right: convertSizeNode(node.child(2), context),
 
         sizeType: "mul",
-        type: "SizeNode",
+        type: "ArithmeticSizeNode",
         position: toPosition(node),
       };
     case "size_div":
@@ -122,7 +135,7 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
         right: convertSizeNode(node.child(2), context),
 
         sizeType: "div",
-        type: "SizeNode",
+        type: "ArithmeticSizeNode",
         position: toPosition(node),
       };
     case "size_add":
@@ -131,7 +144,7 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
         right: convertSizeNode(node.child(2), context),
 
         sizeType: "add",
-        type: "SizeNode",
+        type: "ArithmeticSizeNode",
         position: toPosition(node),
       };
     case "size_sub":
@@ -140,7 +153,7 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
         right: convertSizeNode(node.child(2), context),
 
         sizeType: "sub",
-        type: "SizeNode",
+        type: "ArithmeticSizeNode",
         position: toPosition(node),
       };
     case "size_ident":
@@ -148,7 +161,7 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
         ident: convertIdentifier(node.child(0), context),
 
         sizeType: "ident",
-        type: "SizeNode",
+        type: "IdentifierSizeNode",
         position: toPosition(node),
       };
     case "size_number":
@@ -156,7 +169,7 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
         number: parseInt(node.child(0)!.text),
 
         sizeType: "number",
-        type: "SizeNode",
+        type: "NumberSizeNode",
         position: toPosition(node),
       };
     case "size":
@@ -226,7 +239,7 @@ function convertIdentExpression(node: Parser.SyntaxNode | null, context: SourceF
   };
 }
 
-function convertStringExpression(node: Parser.SyntaxNode | null, context: SourceFile): StringLiteralExpression {
+function convertStringExpression(node: Parser.SyntaxNode | null, _context: SourceFile): StringLiteralExpression {
   if (!node) {
     throw new Error("Expected a string expression node");
   }

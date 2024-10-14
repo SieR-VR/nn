@@ -2,7 +2,7 @@ import { None, Option, Some } from "ts-features";
 import { CallExpression, isAssignmentExpression, isCallExpression, isStringLiteralExpression, isTupleExpression, travel } from "nn-language";
 
 import { DeclarationScope, Flow, Size } from "../resolver";
-import { TypeChecker, SizeType, Vertex, Type } from "..";
+import { SizeType, Type, TypeChecker, Vertex } from "..";
 import { Polynomial } from "./polynomial";
 
 export interface Edge {
