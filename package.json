@@ -14,7 +14,8 @@
     "build:cli": "yarn swc src -d out",
     "treesitter": "yarn workspace nn-tree-sitter run tree-sitter",
     "lint": "yarn eslint .",
-    "lint:fix": "yarn eslint . --fix"
+    "lint:fix": "yarn eslint . --fix",
+    "nn": "node --enable-source-maps out/src/nn.js"
   },
   "dependencies": {
     "ts-features": "^1.3.5"

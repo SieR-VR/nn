@@ -11,9 +11,11 @@ import { exit } from "process";
 
 const program = new Command('nn')
   .version('0.1')
-  .option('-f, --file <file>', 'File to compile')
-  .option('-o, --output <output>', 'Output python file')
+  .argument('<file>', 'File to compile')
+  .option('-o, --output <output>', 'Output python file path')
   .option('-t, --target <target>', 'Target framework settings file or framework name')
+  .usage('[options] <file>')
+  .showHelpAfterError()
   .parse(process.argv);
 
 const opts = program.opts();
