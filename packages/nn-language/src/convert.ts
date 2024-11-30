@@ -4,20 +4,23 @@ import {
   ArgumentList,
   AssignmentExpression,
   CallExpression,
-  Declaration, 
-  Expression, 
-  Identifier, 
-  IdentifierExpression, 
-  SizeDeclList, 
-  SizeNode, 
-  StringLiteralExpression, 
-  TupleExpression, 
-  TypeNode
+  Declaration,
+  Expression,
+  Identifier,
+  IdentifierExpression,
+  SizeDeclList,
+  SizeNode,
+  StringLiteralExpression,
+  TupleExpression,
+  TypeNode,
 } from "./ast";
 import { toPosition } from "./utils";
 import { SourceFile } from ".";
 
-function convertIdentifier(node: Parser.SyntaxNode | null, _context: SourceFile): Identifier {
+function convertIdentifier(
+  node: Parser.SyntaxNode | null,
+  _context: SourceFile
+): Identifier {
   if (!node) {
     throw new Error(`Expected an identifier node, got null`);
   }
@@ -29,7 +32,10 @@ function convertIdentifier(node: Parser.SyntaxNode | null, _context: SourceFile)
   };
 }
 
-function convertSizeDeclList(node: Parser.SyntaxNode | null, context: SourceFile): SizeDeclList {
+function convertSizeDeclList(
+  node: Parser.SyntaxNode | null,
+  context: SourceFile
+): SizeDeclList {
   if (!node) {
     return {
       type: "SizeDeclList",
@@ -41,14 +47,16 @@ function convertSizeDeclList(node: Parser.SyntaxNode | null, context: SourceFile
 
   return {
     type: "SizeDeclList",
-    decls: node.namedChildren
-      .map((child) => convertIdentifier(child, context)),
+    decls: node.namedChildren.map((child) => convertIdentifier(child, context)),
 
     position: toPosition(node),
   };
 }
 
-function convertArgumentList(node: Parser.SyntaxNode | null, context: SourceFile): ArgumentList {
+function convertArgumentList(
+  node: Parser.SyntaxNode | null,
+  context: SourceFile
+): ArgumentList {
   if (!node) {
     return {
       type: "ArgumentList",
@@ -69,28 +77,48 @@ function convertArgumentList(node: Parser.SyntaxNode | null, context: SourceFile
   };
 }
 
-export function convertDeclaration(node: Parser.SyntaxNode, context: SourceFile): Declaration {
+export function convertDeclaration(
+  node: Parser.SyntaxNode,
+  context: SourceFile
+): Declaration {
   return {
     type: "Declaration",
-    name: convertIdentifier(node.childForFieldName('name'), context),
-    sizeDeclList: convertSizeDeclList(node.childForFieldName('sizeDeclList'), context),
-    argumentList: convertArgumentList(node.childForFieldName('argumentList'), context),
-    returnType: node.childForFieldName('returnType')
-      ? convertTypeNode(node.childForFieldName('returnType'), context)
+    name: convertIdentifier(node.childForFieldName("name"), context),
+    sizeDeclList: convertSizeDeclList(
+      node.childForFieldName("sizeDeclList"),
+      context
+    ),
+    argumentList: convertArgumentList(
+      node.childForFieldName("argumentList"),
+      context
+    ),
+    returnType: node.childForFieldName("returnType")
+      ? convertTypeNode(node.childForFieldName("returnType"), context)
       : undefined,
 
-    firstPipe: node.childForFieldName('firstPipe') !== null,
-    exprs:
-      node.childForFieldName('expressions')
-        ? [node.childForFieldName('expr_first'), ...node.childrenForFieldName('expr_last')]
-          .map((child) => convertExpression(child, context))
-        : [],
+    firstPipe: node.childForFieldName("firstPipe") !== null,
+    exprs: node.childForFieldName("expressions")
+      ? [
+          node.childForFieldName("expr_first"),
+          ...node.childrenForFieldName("expr_last"),
+        ].map((child) => convertExpression(child, context))
+      : [],
+
+    commentLeading: node
+      .childrenForFieldName("commentLeading")
+      .map((child) => child.text.slice(1).trim()),
+    commentTrailing: node
+      .childrenForFieldName("commentTrailing")
+      .map((child) => child.text.slice(1).trim()),
 
     position: toPosition(node),
   };
 }
 
-function convertTypeNode(node: Parser.SyntaxNode | null, context: SourceFile): TypeNode {
+function convertTypeNode(
+  node: Parser.SyntaxNode | null,
+  context: SourceFile
+): TypeNode {
   if (!node) {
     throw new Error("Expected a type node");
   }
@@ -99,13 +127,18 @@ function convertTypeNode(node: Parser.SyntaxNode | null, context: SourceFile): T
     type: "TypeNode",
     isTensor: true,
     sizes: node.child(1)
-      ? node.child(1)!.namedChildren.map((child) => convertSizeNode(child, context))
+      ? node
+          .child(1)!
+          .namedChildren.map((child) => convertSizeNode(child, context))
       : [],
     position: toPosition(node),
   };
 }
 
-function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): SizeNode {
+function convertSizeNode(
+  node: Parser.SyntaxNode | null,
+  context: SourceFile
+): SizeNode {
   if (!node) {
     throw new Error("Expected a size node");
   }
@@ -182,7 +215,10 @@ function convertSizeNode(node: Parser.SyntaxNode | null, context: SourceFile): S
   return {} as SizeNode;
 }
 
-function convertCallExpression(node: Parser.SyntaxNode | null, context: SourceFile): CallExpression {
+function convertCallExpression(
+  node: Parser.SyntaxNode | null,
+  context: SourceFile
+): CallExpression {
   if (!node) {
     throw new Error("Expected a call expression node");
   }
@@ -191,7 +227,9 @@ function convertCallExpression(node: Parser.SyntaxNode | null, context: SourceFi
     type: "CallExpression",
     callee: convertIdentifier(node.child(0), context),
     sizes: node.child(1)
-      ? node.child(1)!.namedChildren.map((child) => convertSizeNode(child, context))
+      ? node
+          .child(1)!
+          .namedChildren.map((child) => convertSizeNode(child, context))
       : [],
     args: node.children
       .filter((child) => child.type.includes("expression"))
@@ -201,20 +239,28 @@ function convertCallExpression(node: Parser.SyntaxNode | null, context: SourceFi
   };
 }
 
-function convertTupleExpression(node: Parser.SyntaxNode | null, context: SourceFile): TupleExpression {
+function convertTupleExpression(
+  node: Parser.SyntaxNode | null,
+  context: SourceFile
+): TupleExpression {
   if (!node) {
     throw new Error("Expected a tuple expression node");
   }
 
   return {
     type: "TupleExpression",
-    elements: node.namedChildren.map((child) => convertExpression(child, context)),
+    elements: node.namedChildren.map((child) =>
+      convertExpression(child, context)
+    ),
 
     position: toPosition(node),
   };
 }
 
-function convertAssignmentExpression(node: Parser.SyntaxNode | null, context: SourceFile): AssignmentExpression {
+function convertAssignmentExpression(
+  node: Parser.SyntaxNode | null,
+  context: SourceFile
+): AssignmentExpression {
   if (!node) {
     throw new Error("Expected an assignment expression node");
   }
@@ -227,7 +273,10 @@ function convertAssignmentExpression(node: Parser.SyntaxNode | null, context: So
   };
 }
 
-function convertIdentExpression(node: Parser.SyntaxNode | null, context: SourceFile): IdentifierExpression {
+function convertIdentExpression(
+  node: Parser.SyntaxNode | null,
+  context: SourceFile
+): IdentifierExpression {
   if (!node) {
     throw new Error("Expected an identifier expression node");
   }
@@ -239,7 +288,10 @@ function convertIdentExpression(node: Parser.SyntaxNode | null, context: SourceF
   };
 }
 
-function convertStringExpression(node: Parser.SyntaxNode | null, _context: SourceFile): StringLiteralExpression {
+function convertStringExpression(
+  node: Parser.SyntaxNode | null,
+  _context: SourceFile
+): StringLiteralExpression {
   if (!node) {
     throw new Error("Expected a string expression node");
   }
@@ -251,7 +303,10 @@ function convertStringExpression(node: Parser.SyntaxNode | null, _context: Sourc
   };
 }
 
-function convertExpression(node: Parser.SyntaxNode | null, context: SourceFile): Expression {
+function convertExpression(
+  node: Parser.SyntaxNode | null,
+  context: SourceFile
+): Expression {
   if (!node) {
     throw new Error("Expected an expression node");
   }

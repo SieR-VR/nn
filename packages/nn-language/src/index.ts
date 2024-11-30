@@ -62,6 +62,6 @@ export namespace SourceFile {
   }
 }
 
-export { travel, nodeOnPosition } from "./utils";
+export * from "./utils";
 export * from "./types";
 export * from "./ast";

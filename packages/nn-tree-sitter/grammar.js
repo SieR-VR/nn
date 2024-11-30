@@ -5,6 +5,7 @@ module.exports = grammar({
   rules: {
     source_file: $ => repeat($.declaration),
     declaration: $ => seq(
+      field('commentLeading', repeat($.comment)),
       field('name', $.ident), 
       field('sizeDeclList', optional($.size_decls)), 
       field('argumentList', $.arguments), 
@@ -12,6 +13,7 @@ module.exports = grammar({
       optional(
         field('expressions', seq( 
           "=",
+          field('commentTrailing', repeat($.comment)),
           field('firstPipe', optional("|>")), 
           field('expr_first', $.expression),
           repeat(seq("|>", field('expr_last', $.expression)))

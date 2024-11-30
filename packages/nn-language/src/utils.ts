@@ -1,68 +1,107 @@
-import { SyntaxNode } from "tree-sitter"
+import { SyntaxNode } from "tree-sitter";
 
-import { Position } from "./types"
-import { Node } from "./ast"
+import { Position } from "./types";
+import { Node, SizeNode, TypeNode } from "./ast";
 
 export function toPosition(node: SyntaxNode | SyntaxNode[]): Position {
   if (Array.isArray(node)) {
     return {
       pos: node[0].startIndex,
       end: node[node.length - 1].endIndex,
-    }
+    };
   }
 
   return {
     pos: node.startIndex,
-    end: node.endIndex
-  }
+    end: node.endIndex,
+  };
 }
 
-type IsCallback<T extends Node> = (node: Node) => node is T
-type BooleanCallback = (node: Node) => boolean
-type TravelCallback<T> =
-  T extends Node ? IsCallback<T> : (node: Node) => T | undefined
+type IsCallback<T extends Node> = (node: Node) => node is T;
+type BooleanCallback = (node: Node) => boolean;
+type TravelCallback<T> = T extends Node
+  ? IsCallback<T>
+  : (node: Node) => T | undefined;
 
-export function travel<T>(node: Node | Node[], callback: TravelCallback<T> | BooleanCallback): T[] {
-  const result: T[] = []
+export function travel<T>(
+  node: Node | Node[],
+  callback: TravelCallback<T> | BooleanCallback
+): T[] {
+  const result: T[] = [];
 
   const _travel = (node: Node | Node[] | Node[keyof Node]) => {
-    if (!node || typeof node === "string" || typeof node === "boolean" || typeof node === "number") return
-    if ("pos" in node) return
+    if (
+      !node ||
+      typeof node === "string" ||
+      typeof node === "boolean" ||
+      typeof node === "number"
+    )
+      return;
+    if ("pos" in node) return;
 
     if (Array.isArray(node)) {
-      node.forEach(_travel)
-      return
+      node.forEach(_travel);
+      return;
     }
-    
-    const res = callback(node)
+
+    const res = callback(node);
     if (typeof res === "boolean") {
-      res && result.push(node as T)
+      res && result.push(node as T);
     } else if (res !== undefined) {
-      result.push(res)
+      result.push(res);
     }
 
-    Object.values(node).forEach(_travel)
-  }
+    Object.values(node).forEach(_travel);
+  };
 
-  _travel(node)
-  return result
+  _travel(node);
+  return result;
 }
 
-export function nodeOnPosition<T extends Node = Node>(node: Node | Node[], position: number, filter?: TravelCallback<T> | BooleanCallback): T | undefined {
-  const filtered = filter
-    ? travel(node, filter)
-    : node as T[]
+export function nodeOnPosition<T extends Node = Node>(
+  node: Node | Node[],
+  position: number,
+  filter?: TravelCallback<T> | BooleanCallback
+): T | undefined {
+  const filtered = filter ? travel(node, filter) : (node as T[]);
 
   const sorted = filtered
-    .filter(node => {
-      const { pos, end } = node.position
-      return position >= pos && position <= end
+    .filter((node) => {
+      const { pos, end } = node.position;
+      return position >= pos && position <= end;
     })
     .sort((a, b) => {
-      const lenA = a.position.end - a.position.pos
-      const lenB = b.position.end - b.position.pos
-      return lenA - lenB
-    })
-  
-  return sorted.at(0)
+      const lenA = a.position.end - a.position.pos;
+      const lenB = b.position.end - b.position.pos;
+      return lenA - lenB;
+    });
+
+  return sorted.at(0);
+}
+
+export function getTypeNodeString(node: TypeNode): string {
+  return node.sizes
+    ? `Tensor[${node.sizes.map(getSizeNodeString).join(", ")}]`
+    : `Tensor`;
+}
+
+export function getSizeNodeString(node: SizeNode): string {
+  const sizeTypeOperator = {
+    pow: "^",
+    mul: "*",
+    div: "/",
+    add: "+",
+    sub: "-",
+  };
+
+  switch (node.type) {
+    case "ArithmeticSizeNode":
+      return `(${getSizeNodeString(node.left)} ${
+        sizeTypeOperator[node.sizeType]
+      } ${getSizeNodeString(node.right)})`;
+    case "IdentifierSizeNode":
+      return node.ident.value;
+    case "NumberSizeNode":
+      return node.number.toString();
+  }
 }

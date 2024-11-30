@@ -25,12 +25,16 @@ export interface Identifier extends Node {
 
 export interface Declaration extends Node {
   name: Identifier
-  sizeDeclList?: SizeDeclList
+  sizeDeclList: SizeDeclList
   argumentList: ArgumentList
+
   firstPipe: boolean
   exprs: Expression[]
+  
   returnType?: TypeNode
 
+  commentLeading: string[],
+  commentTrailing: string[],
   type: "Declaration"
 }
 

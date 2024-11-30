@@ -1,2 +1,4 @@
-# this is the comment
+# Hello world
+# This is a comment
+# # Applied Markdown syntax
 Comment(x: Tensor) = x
