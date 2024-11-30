@@ -24,7 +24,9 @@
     "parse": "tree-sitter parse",
     "test": "node --test bindings/node/*_test.js",
     "clean": "rm -rf bindings/ build/ src/",
-    "build": "yarn clean && tree-sitter generate && node-gyp-build"
+    "hash-compare": "node scripts/hash-compare.js",
+    "build": "yarn hash-compare && yarn build:full",
+    "build:full": "yarn clean && tree-sitter generate && node-gyp-build"
   },
   "main": "bindings/node/index.js",
   "types": "bindings/node",
