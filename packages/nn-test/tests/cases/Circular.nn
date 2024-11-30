@@ -1,0 +1,5 @@
+Circular1(x: Tensor) =
+    |> Circular2()
+
+Circular2(x: Tensor) =
+    |> Circular1()
