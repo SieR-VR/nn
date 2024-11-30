@@ -7,6 +7,7 @@ compose-dev.yaml
 
 # Build result
 out
+*.py
 
 # Auto-generated files
 ./src/ohm/*bundle*
