@@ -25,7 +25,8 @@
     "test": "node --test bindings/node/*_test.js",
     "clean": "rm -rf bindings/ build/ src/",
     "hash-compare": "node scripts/hash-compare.js",
-    "build": "yarn hash-compare && yarn build:full",
+    "hash-update": "node scripts/hash-update.js",
+    "build": "yarn hash-compare || yarn build:full && yarn hash-update",
     "build:full": "yarn clean && tree-sitter generate && node-gyp-build"
   },
   "main": "bindings/node/index.js",
