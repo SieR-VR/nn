@@ -44,3 +44,4 @@ export function checker(context: TypeChecker) {
 export * from './vertex';
 export * from './type';
 export * from './sizetype';
+export * from './polynomial';
