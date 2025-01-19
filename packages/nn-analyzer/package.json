@@ -1,0 +1,11 @@
+{
+  "name": "nn-analyzer",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "yarn run -T swc ./src -d ./out",
+    "clean": "rm -rf ./out"
+  },
+  "main": "out/src/index.js",
+  "typings": "src/index.ts"
+}

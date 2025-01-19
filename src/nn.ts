@@ -6,6 +6,7 @@ import { Command } from "commander";
 import { SourceFile } from "nn-language";
 import { TypeChecker } from "nn-type-checker";
 import { codegen, getSettings } from "nn-codegen";
+import { analyze } from "nn-analyzer";
 
 import { exit } from "process";
 
@@ -17,6 +18,7 @@ const program = new Command("nn")
     "-t, --target <target>",
     "Target framework settings file or framework name"
   )
+  .option("-a, --analyze <analyze>", "To analyze flow name")
   .usage("[options] <file>")
   .showHelpAfterError()
   .parse(process.argv);
@@ -82,13 +84,24 @@ if (diagnostics.length) {
   exit(1);
 }
 
-const settings = getSettings(opts.target, (path: string) =>
-  fs.readFileSync(path, "utf-8")
-);
-const python = codegen(source, checkContext, settings);
+if (opts.analyze) {
+  const analyzeResult = analyze(
+    checkContext,
+    { declaration: opts.analyze },
+    { sizeMap: {} }
+  );
+  console.log(analyzeResult);
+}
 
-const output =
-  opts.output ||
-  path.join(process.cwd(), path.basename(file.replace(/\.nn$/, "") + ".py"));
+if (opts.target) {
+  const settings = getSettings(opts.target, (path: string) =>
+    fs.readFileSync(path, "utf-8")
+  );
+  const python = codegen(source, checkContext, settings);
 
-fs.writeFileSync(output, python);
+  const output =
+    opts.output ||
+    path.join(process.cwd(), path.basename(file.replace(/\.nn$/, "") + ".py"));
+
+  fs.writeFileSync(output, python);
+}
