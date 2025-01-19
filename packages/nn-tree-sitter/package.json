@@ -23,11 +23,11 @@
     "start": "tree-sitter playground",
     "parse": "tree-sitter parse",
     "test": "node --test bindings/node/*_test.js",
-    "clean": "rm -rf bindings/ build/ src/",
+    "clean": "rm -rf bindings/ build/ src/ && rm ./scripts/.build-hash",
     "hash-compare": "node scripts/hash-compare.js",
     "hash-update": "node scripts/hash-update.js",
     "build": "yarn hash-compare || yarn build:full && yarn hash-update",
-    "build:full": "yarn clean && tree-sitter generate && node-gyp-build"
+    "build:full": "yarn clean || tree-sitter init && tree-sitter generate && node-gyp-build"
   },
   "main": "bindings/node/index.js",
   "types": "bindings/node",
@@ -40,11 +40,5 @@
     "queries/*",
     "src/**",
     "*.wasm"
-  ],
-  "tree-sitter": [
-    {
-      "scope": "source.nn",
-      "injection-regex": "^nn$"
-    }
   ]
 }
