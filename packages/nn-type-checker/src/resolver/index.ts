@@ -53,7 +53,7 @@ export function resolve(source: SourceFile, context: TypeChecker): void {
         const flows = result.unwrap();
 
         context.diagnostics.push({
-          message: `Circular flow detected from '${flows.map(flow => flow.declaration).join(', ')}'.`,
+          message: `Circular flow detected from '${flows.map(flow => flow.declaration.declaration).join(', ')}'.`,
           position: flows[0].declaration.node.position
         });
         context.nonRecoverable = true;
