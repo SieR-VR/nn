@@ -6,7 +6,8 @@
     "nn-tree-sitter": "workspace:^"
   },
   "scripts": {
-    "build": "yarn run -T swc . -d ./out"
+    "build": "yarn run -T swc . -d ./out",
+    "clean": "rm -rf ./out"
   },
   "main": "out/src/index.js",
   "typings": "src/index.ts"

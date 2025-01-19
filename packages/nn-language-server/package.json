@@ -28,7 +28,8 @@
   },
   "main": "out/client/extension.js",
   "scripts": {
-    "build": "yarn run -T swc . -d ./out"
+    "build": "yarn run -T swc . -d ./out",
+    "clean": "rm -rf ./out"
   },
   "dependencies": {
     "commander": "^12.1.0",

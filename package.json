@@ -12,6 +12,7 @@
     "test": "yarn workspace nn-test test",
     "build": "yarn workspaces foreach --all --parallel run build && yarn build:cli",
     "build:cli": "yarn swc src -d out",
+    "clean": "yarn workspaces foreach --all --parallel run clean",
     "treesitter": "yarn workspace nn-tree-sitter run tree-sitter",
     "lint": "yarn eslint .",
     "lint:fix": "yarn eslint . --fix",
