@@ -4404,6 +4404,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"nn-analyzer@workspace:packages/nn-analyzer":
+  version: 0.0.0-use.local
+  resolution: "nn-analyzer@workspace:packages/nn-analyzer"
+  languageName: unknown
+  linkType: soft
+
 "nn-codegen@workspace:packages/nn-codegen":
   version: 0.0.0-use.local
   resolution: "nn-codegen@workspace:packages/nn-codegen"
