@@ -1,7 +1,10 @@
 import { SyntaxNode } from "tree-sitter";
 
+import { Node } from "./node";
 import { Position } from "./types";
-import { Node, SizeNode, TypeNode } from "./ast";
+import { SizeNode, TypeNode } from "./ast";
+
+export const emptyPosition: Position = { pos: 0, end: 0 };
 
 export function toPosition(node: SyntaxNode | SyntaxNode[]): Position {
   if (Array.isArray(node)) {

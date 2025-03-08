@@ -14,8 +14,13 @@ import {
   TupleExpression,
   TypeNode,
 } from "./ast";
-import { toPosition } from "./utils";
-import { SourceFile } from ".";
+import {
+  ArithmeticSizeNode,
+  IdentifierSizeNode,
+  NumberSizeNode,
+  SourceFile,
+} from ".";
+import { createNode } from "./node";
 
 function convertIdentifier(
   node: Parser.SyntaxNode | null,
@@ -25,94 +30,84 @@ function convertIdentifier(
     throw new Error(`Expected an identifier node, got null`);
   }
 
-  return {
-    type: "Identifier",
-    value: node.text,
-    position: toPosition(node),
-  };
+  return createNode("Identifier", { value: node.text }, node, _context);
 }
 
 function convertSizeDeclList(
   node: Parser.SyntaxNode | null,
   context: SourceFile
 ): SizeDeclList {
-  if (!node) {
-    return {
-      type: "SizeDeclList",
-      decls: [],
-
-      position: { pos: 0, end: 0 },
-    };
-  }
-
-  return {
-    type: "SizeDeclList",
-    decls: node.namedChildren.map((child) => convertIdentifier(child, context)),
-
-    position: toPosition(node),
-  };
+  return node
+    ? createNode(
+        "SizeDeclList",
+        {
+          decls: node!.namedChildren.map((child) =>
+            convertIdentifier(child, context)
+          ),
+        },
+        node,
+        context
+      )
+    : createNode("SizeDeclList", { decls: [] }, null, context);
 }
 
 function convertArgumentList(
   node: Parser.SyntaxNode | null,
   context: SourceFile
 ): ArgumentList {
-  if (!node) {
-    return {
-      type: "ArgumentList",
-      args: [],
-
-      position: { pos: 0, end: 0 },
-    };
-  }
-
-  return {
-    type: "ArgumentList",
-    args: node.namedChildren.map((child) => ({
-      ident: convertIdentifier(child.child(0), context),
-      valueType: convertTypeNode(child.child(2), context),
-    })),
-
-    position: toPosition(node),
-  };
+  return node
+    ? createNode(
+        "ArgumentList",
+        {
+          args: node.namedChildren.map((child) => ({
+            ident: convertIdentifier(child.child(0), context),
+            valueType: convertTypeNode(child.child(2), context),
+          })),
+        },
+        node,
+        context
+      )
+    : createNode("ArgumentList", { args: [] }, null, context);
 }
 
 export function convertDeclaration(
   node: Parser.SyntaxNode,
   context: SourceFile
 ): Declaration {
-  return {
-    type: "Declaration",
-    name: convertIdentifier(node.childForFieldName("name"), context),
-    sizeDeclList: convertSizeDeclList(
-      node.childForFieldName("sizeDeclList"),
-      context
-    ),
-    argumentList: convertArgumentList(
-      node.childForFieldName("argumentList"),
-      context
-    ),
-    returnType: node.childForFieldName("returnType")
-      ? convertTypeNode(node.childForFieldName("returnType"), context)
-      : undefined,
+  return createNode(
+    "Declaration",
+    {
+      name: convertIdentifier(node.childForFieldName("name"), context),
+      sizeDeclList: convertSizeDeclList(
+        node.childForFieldName("sizeDeclList"),
+        context
+      ),
+      argumentList: convertArgumentList(
+        node.childForFieldName("argumentList"),
+        context
+      ),
+      returnType: node.childForFieldName("returnType")
+        ? convertTypeNode(node.childForFieldName("returnType"), context)
+        : undefined,
 
-    firstPipe: node.childForFieldName("firstPipe") !== null,
-    exprs: node.childForFieldName("expressions")
-      ? [
-          node.childForFieldName("expr_first"),
-          ...node.childrenForFieldName("expr_last"),
-        ].map((child) => convertExpression(child, context))
-      : [],
+      firstPipe: node.childForFieldName("firstPipe") !== null,
+      exprs: node.childForFieldName("expressions")
+        ? [
+            node.childForFieldName("expr_first"),
+            ...node.childrenForFieldName("expr_last"),
+          ].map((child) => convertExpression(child, context))
+        : [],
 
-    commentLeading: node
-      .childrenForFieldName("commentLeading")
-      .map((child) => child.text.slice(1).trim()),
-    commentTrailing: node
-      .childrenForFieldName("commentTrailing")
-      .map((child) => child.text.slice(1).trim()),
-
-    position: toPosition(node),
-  };
+      commentLeading: node
+        .childrenForFieldName("commentLeading")
+        .map((child) => child.text.slice(1).trim()),
+      commentTrailing: node
+        .childrenForFieldName("commentTrailing")
+        .map((child) => child.text.slice(1).trim()),
+    },
+    node,
+    context
+  );
 }
 
 function convertTypeNode(
@@ -123,16 +118,19 @@ function convertTypeNode(
     throw new Error("Expected a type node");
   }
 
-  return {
-    type: "TypeNode",
-    isTensor: true,
-    sizes: node.child(1)
-      ? node
-          .child(1)!
-          .namedChildren.map((child) => convertSizeNode(child, context))
-      : [],
-    position: toPosition(node),
-  };
+  return createNode(
+    "TypeNode",
+    {
+      isTensor: true,
+      sizes: node.child(1)
+        ? node
+            .child(1)!
+            .namedChildren.map((child) => convertSizeNode(child, context))
+        : [],
+    },
+    node,
+    context
+  );
 }
 
 function convertSizeNode(
@@ -144,75 +142,89 @@ function convertSizeNode(
   }
 
   switch (node.type) {
-    case "size_pow":
-      return {
-        left: convertSizeNode(node.child(0), context),
-        right: convertSizeNode(node.child(2), context),
-
-        sizeType: "pow",
-        type: "ArithmeticSizeNode",
-        position: toPosition(node),
-      };
-    case "size_mul":
-      return {
-        left: convertSizeNode(node.child(0), context),
-        right: convertSizeNode(node.child(2), context),
-
-        sizeType: "mul",
-        type: "ArithmeticSizeNode",
-        position: toPosition(node),
-      };
-    case "size_div":
-      return {
-        left: convertSizeNode(node.child(0), context),
-        right: convertSizeNode(node.child(2), context),
-
-        sizeType: "div",
-        type: "ArithmeticSizeNode",
-        position: toPosition(node),
-      };
-    case "size_add":
-      return {
-        left: convertSizeNode(node.child(0), context),
-        right: convertSizeNode(node.child(2), context),
-
-        sizeType: "add",
-        type: "ArithmeticSizeNode",
-        position: toPosition(node),
-      };
-    case "size_sub":
-      return {
-        left: convertSizeNode(node.child(0), context),
-        right: convertSizeNode(node.child(2), context),
-
-        sizeType: "sub",
-        type: "ArithmeticSizeNode",
-        position: toPosition(node),
-      };
-    case "size_ident":
-      return {
-        ident: convertIdentifier(node.child(0), context),
-
-        sizeType: "ident",
-        type: "IdentifierSizeNode",
-        position: toPosition(node),
-      };
-    case "size_number":
-      return {
-        number: parseInt(node.child(0)!.text),
-
-        sizeType: "number",
-        type: "NumberSizeNode",
-        position: toPosition(node),
-      };
     case "size":
     case "size_operation":
       return convertSizeNode(node.child(0), context);
+    case "size_pow":
+      return createNode<ArithmeticSizeNode>(
+        "ArithmeticSizeNode",
+        {
+          left: convertSizeNode(node.child(0), context),
+          right: convertSizeNode(node.child(2), context),
+          sizeType: "pow",
+        },
+        node,
+        context
+      );
+    case "size_mul":
+      return createNode<ArithmeticSizeNode>(
+        "ArithmeticSizeNode",
+        {
+          left: convertSizeNode(node.child(0), context),
+          right: convertSizeNode(node.child(2), context),
+          sizeType: "mul",
+        },
+        node,
+        context
+      );
+    case "size_div":
+      return createNode<ArithmeticSizeNode>(
+        "ArithmeticSizeNode",
+        {
+          left: convertSizeNode(node.child(0), context),
+          right: convertSizeNode(node.child(2), context),
+          sizeType: "div",
+        },
+        node,
+        context
+      );
+    case "size_add":
+      return createNode<ArithmeticSizeNode>(
+        "ArithmeticSizeNode",
+        {
+          left: convertSizeNode(node.child(0), context),
+          right: convertSizeNode(node.child(2), context),
+          sizeType: "add",
+        },
+        node,
+        context
+      );
+    case "size_sub":
+      return createNode<ArithmeticSizeNode>(
+        "ArithmeticSizeNode",
+        {
+          left: convertSizeNode(node.child(0), context),
+          right: convertSizeNode(node.child(2), context),
+          sizeType: "sub",
+        },
+        node,
+        context
+      );
+    case "size_ident":
+      return createNode<IdentifierSizeNode>(
+        "IdentifierSizeNode",
+        {
+          ident: convertIdentifier(node.child(0), context),
+          sizeType: "ident",
+        },
+        node,
+        context
+      );
+    case "size_number":
+      return createNode<NumberSizeNode>(
+        "NumberSizeNode",
+        {
+          number: parseInt(node.text),
+          sizeType: "number",
+        },
+        node,
+        context
+      );
     case "size_paren":
       return convertSizeNode(node.child(1), context);
   }
 
-  return {} as SizeNode;
+  throw new Error(`Unknown size node type: ${node.type}`);
 }
 
 function convertCallExpression(
@@ -223,20 +235,22 @@ function convertCallExpression(
     throw new Error("Expected a call expression node");
   }
 
-  return {
-    type: "CallExpression",
-    callee: convertIdentifier(node.child(0), context),
-    sizes: node.child(1)
-      ? node
-          .child(1)!
-          .namedChildren.map((child) => convertSizeNode(child, context))
-      : [],
-    args: node.children
-      .filter((child) => child.type.includes("expression"))
-      .map((child) => convertExpression(child, context)),
-
-    position: toPosition(node),
-  };
+  return createNode(
+    "CallExpression",
+    {
+      callee: convertIdentifier(node.child(0), context),
+      sizes: node.child(1)
+        ? node
+            .child(1)!
+            .namedChildren.map((child) => convertSizeNode(child, context))
+        : [],
+      args: node.children
+        .filter((child) => child.type.includes("expression"))
+        .map((child) => convertExpression(child, context)),
+    },
+    node,
+    context
+  );
 }
 
 function convertTupleExpression(
@@ -247,14 +261,16 @@ function convertTupleExpression(
     throw new Error("Expected a tuple expression node");
   }
 
-  return {
-    type: "TupleExpression",
-    elements: node.namedChildren.map((child) =>
-      convertExpression(child, context)
-    ),
-
-    position: toPosition(node),
-  };
+  return createNode(
+    "TupleExpression",
+    {
+      elements: node.namedChildren.map((child) =>
+        convertExpression(child, context)
+      ),
+    },
+    node,
+    context
+  );
 }
 
 function convertAssignmentExpression(
@@ -265,12 +281,15 @@ function convertAssignmentExpression(
     throw new Error("Expected an assignment expression node");
   }
 
-  return {
-    type: "AssignmentExpression",
-    left: convertIdentifier(node.child(0), context),
+  return createNode(
+    "AssignmentExpression",
+    {
+      left: convertIdentifier(node.child(0), context),
     right: convertExpression(node.child(2), context),
-    position: toPosition(node),
-  };
+    },
+    node,
+    context
+  );
 }
 
 function convertIdentExpression(
@@ -281,26 +300,32 @@ function convertIdentExpression(
     throw new Error("Expected an identifier expression node");
   }
 
-  return {
-    type: "IdentifierExpression",
-    ident: convertIdentifier(node.child(0), context),
-    position: toPosition(node),
-  };
+  return createNode(
+    "IdentifierExpression",
+    {
+      ident: convertIdentifier(node.child(0), context),
+    },
+    node,
+    context
+  );
 }
 
 function convertStringExpression(
   node: Parser.SyntaxNode | null,
-  _context: SourceFile
+  context: SourceFile
 ): StringLiteralExpression {
   if (!node) {
-    throw new Error("Expected a string expression node");
+    throw new Error("Expected a string literal expression node");
   }
 
-  return {
-    type: "StringLiteralExpression",
-    value: node.text,
-    position: toPosition(node),
-  };
+  return createNode(
+    "StringLiteralExpression",
+    {
+      value: node.text,
+    },
+    node,
+    context
+  );
 }
 
 function convertExpression(
