@@ -11,3 +11,6 @@ out
 
 # Auto-generated files
 ./src/ohm/*bundle*
+
+# windsurf rules
+.windsurfrules
