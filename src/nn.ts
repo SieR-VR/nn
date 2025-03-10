@@ -5,7 +5,7 @@ import { Command } from "commander";
 
 import { SourceFile } from "nn-language";
 import { TypeChecker } from "nn-type-checker";
-import { codegen, getSettings } from "nn-codegen";
+import { onnx, py } from "nn-codegen";
 import { analyze } from "nn-analyzer";
 
 import { exit } from "process";
@@ -14,8 +14,9 @@ const program = new Command("nn")
   .version("0.1")
   .argument("<file>", "File to compile")
   .option("-o, --output <output>", "Output python file path")
+  .option("-t, --target <target>", "Target flow name to codegen")
   .option(
-    "-t, --target <target>",
+    "-c, --code <code>",
     "Target framework settings file or framework name"
   )
   .option("-a, --analyze <analyze>", "To analyze flow name")
@@ -93,15 +94,28 @@ if (opts.analyze) {
   console.log(analyzeResult);
 }
 
-if (opts.target) {
-  const settings = getSettings(opts.target, (path: string) =>
+if (opts.code === "python") {
+  const settings = py.getSettings(opts.target, (path: string) =>
     fs.readFileSync(path, "utf-8")
   );
-  const python = codegen(source, checkContext, settings);
+  const python = py.codegen(source, checkContext, settings);
 
   const output =
     opts.output ||
     path.join(process.cwd(), path.basename(file.replace(/\.nn$/, "") + ".py"));
 
   fs.writeFileSync(output, python);
+}
+
+if (opts.code === "onnx") {
+  const result = onnx.codegen(source, checkContext, {
+    version: "0.1",
+    target: opts.target,
+  });
+
+  const output =
+    opts.output ||
+    path.join(process.cwd(), path.basename(file.replace(/\.nn$/, ".onnx")));
+
+  fs.writeFileSync(output, result);
 }
