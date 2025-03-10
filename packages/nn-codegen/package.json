@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "nn-language": "workspace:^",
-    "nn-type-checker": "workspace:^"
+    "nn-type-checker": "workspace:^",
+    "onnx-proto": "^8.0.1"
   },
   "typings": "src/index.ts",
   "main": "out/src/index.js"
