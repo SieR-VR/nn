@@ -8,6 +8,7 @@ compose-dev.yaml
 # Build result
 out
 *.py
+*.onnx
 
 # Auto-generated files
 ./src/ohm/*bundle*
