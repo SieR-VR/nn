@@ -138,7 +138,7 @@ export namespace Edge {
           !Polynomial.isSame(SizeType.polynomial(left[first]), SizeType.polynomial(left[index]))
         ) {
           context.diagnostics.push({
-            message: `Size mismatch: ${SizeType.toString(left[first])} != ${SizeType.toString(left[index])}.`,
+            message: `Cannot assign ${SizeType.toString(left[first])} to ${SizeType.toString(left[index])}`,
             position: edge.toSolve.expression.position
           });
 

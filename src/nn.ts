@@ -20,6 +20,7 @@ const program = new Command("nn")
     "Target framework settings file or framework name"
   )
   .option("-a, --analyze <analyze>", "To analyze flow name")
+  .option("-s, --size <size>", "Size map")
   .usage("[options] <file>")
   .showHelpAfterError()
   .parse(process.argv);
@@ -108,9 +109,22 @@ if (opts.code === "python") {
 }
 
 if (opts.code === "onnx") {
+  if (!opts.size) {
+    throw new Error("--size is required");
+  }
+
+  const sizeMap = (opts.size as string)
+    .split(",")
+    .reduce((acc, s) => {
+      const [key, value] = s.split("=");
+      acc[key] = Number(value);
+      return acc;
+    }, {} as Record<string, number>);
+
   const result = onnx.codegen(source, checkContext, {
     version: "0.1",
     target: opts.target,
+    sizeMap,
   });
 
   const output =

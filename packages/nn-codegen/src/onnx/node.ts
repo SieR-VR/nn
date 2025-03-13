@@ -11,15 +11,21 @@ import {
   isStringLiteralExpression,
   isTupleExpression,
 } from "nn-language";
-import { TypeChecker } from "nn-type-checker";
+import { Flow, Polynomial, Size, TypeChecker } from "nn-type-checker";
+import { DEFAULT_OPSET_IMPORTS } from ".";
 
-const ONNX_NN_DOMAIN = "nn";
+export const ONNX_NN_DOMAIN = new onnx.OperatorSetIdProto({
+  domain: "nn",
+  version: 1,
+});
 
 interface OnnxContext {
   checker: TypeChecker;
 
   temporaryNameRecord: Map<CallExpression, string>;
   _nextTemporaryIndex: number;
+
+  sizeMap: Record<string, number>;
 }
 
 export function declaration(
@@ -30,10 +36,11 @@ export function declaration(
 
   return new onnx.FunctionProto({
     name: decl.name.value,
-    domain: ONNX_NN_DOMAIN,
+    domain: "nn",
     input,
     output,
     node: nodes,
+    opsetImport: [...DEFAULT_OPSET_IMPORTS, ONNX_NN_DOMAIN],
   });
 }
 
@@ -137,7 +144,7 @@ export function assign(
 
   const result = new onnx.NodeProto({
     opType: callExpr.callee.value,
-    domain: ONNX_NN_DOMAIN,
+    domain: "nn",
     input: [
       ...prevArgs,
       ...callExpr.args.map((e) => expressionName(e, context)),
@@ -155,10 +162,68 @@ export function call(
 ): [string[], onnx.NodeProto] {
   const result = new onnx.NodeProto({
     opType: expr.callee.value,
-    domain: ONNX_NN_DOMAIN,
+    domain: "nn",
     input: [...prevArgs, ...expr.args.map((e) => expressionName(e, context))],
     output: [expressionName(expr, context)],
   });
 
   return [result.output, result];
+}
+
+export function tensorShape(
+  flow: Flow,
+  context: OnnxContext
+): [onnx.TypeProto[], onnx.TypeProto] {
+  const sizeMap = Object.entries(flow.declaration.sizes)
+    .reduce((prev, [ident, size]) => {
+      if (!context.sizeMap[ident]) {
+        throw new Error(`Size ${ident} not found`);
+      }
+
+      prev.set(size, Polynomial.constant(context.sizeMap[ident]));
+      return prev;
+    }, new Map<Size, Polynomial>());
+
+  const inputs = flow.args.map((v) => {
+    const type = TypeChecker.getType(v.first, context.checker).unwrap();
+
+    const assigned = type.shape
+      .map((s) => Polynomial.from(s))
+      .map((p) => Polynomial.assign(p, sizeMap));
+
+    return new onnx.TypeProto({
+      tensorType: {
+        elemType: onnx.TensorProto.DataType.FLOAT,
+        shape: new onnx.TensorShapeProto({
+          dim: assigned.map(
+            (p) =>
+              new onnx.TensorShapeProto.Dimension({
+                dimValue: p.constant,
+              })
+          ),
+        }),
+      },
+    });
+  });
+
+  const outputType = TypeChecker.getType(flow.return, context.checker).unwrap();
+  const assigned = outputType.shape
+    .map((s) => Polynomial.from(s))
+    .map((p) => Polynomial.assign(p, sizeMap));
+
+  const output = new onnx.TypeProto({
+    tensorType: {
+      elemType: onnx.TensorProto.DataType.FLOAT,
+      shape: new onnx.TensorShapeProto({
+        dim: assigned.map(
+          (p) =>
+            new onnx.TensorShapeProto.Dimension({
+              dimValue: p.constant,
+            })
+        ),
+      }),
+    },
+  });
+
+  return [inputs, output];
 }
