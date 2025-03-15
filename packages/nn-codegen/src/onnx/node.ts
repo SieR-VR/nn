@@ -174,15 +174,17 @@ export function tensorShape(
   flow: Flow,
   context: OnnxContext
 ): [onnx.TypeProto[], onnx.TypeProto] {
-  const sizeMap = Object.entries(flow.declaration.sizes)
-    .reduce((prev, [ident, size]) => {
+  const sizeMap = Object.entries(flow.declaration.sizes).reduce(
+    (prev, [ident, size]) => {
       if (!context.sizeMap[ident]) {
         throw new Error(`Size ${ident} not found`);
       }
 
       prev.set(size, Polynomial.constant(context.sizeMap[ident]));
       return prev;
-    }, new Map<Size, Polynomial>());
+    },
+    new Map<Size, Polynomial>()
+  );
 
   const inputs = flow.args.map((v) => {
     const type = TypeChecker.getType(v.first, context.checker).unwrap();
@@ -206,7 +208,10 @@ export function tensorShape(
     });
   });
 
-  const outputType = TypeChecker.getType(flow.return, context.checker).unwrap();
+  const outputType = TypeChecker.getType(
+    flow.return!,
+    context.checker
+  ).unwrap();
   const assigned = outputType.shape
     .map((s) => Polynomial.from(s))
     .map((p) => Polynomial.assign(p, sizeMap));
